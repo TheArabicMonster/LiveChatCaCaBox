@@ -245,6 +245,11 @@
       return div.innerHTML;
     }
 
+    // Escape for JavaScript string context
+    function escapeJs(text) {
+      return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+    }
+
     // Display media files in grid
     function displayMediaFiles(files) {
       const grid = document.getElementById('media-grid');
@@ -262,10 +267,12 @@
         const escapedPath = escapeHtml(file.path);
         const escapedName = escapeHtml(file.name);
         const escapedType = escapeHtml(file.type);
+        const jsEscapedPath = escapeJs(file.path);
+        const jsEscapedName = escapeJs(file.name);
         
         return `
           <div class="media-card bg-white rounded-lg shadow overflow-hidden cursor-pointer" 
-               onclick="sendMediaToStream('${escapedPath.replace(/'/g, "\\'")}', '${escapedType}', '${escapedName.replace(/'/g, "\\'")}', ${file.isUploaded || false})">
+               onclick="sendMediaToStream('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false})">
             <div class="relative">
               ${file.type === 'video' ? 
                 `<video class="media-thumbnail" src="${escapedPath}" muted></video>
