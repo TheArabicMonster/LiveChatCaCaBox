@@ -76,6 +76,7 @@ logs
 docs
 data
 sqlite.db*
+uploads
 
 ytdl.json
 

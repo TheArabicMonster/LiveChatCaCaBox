@@ -20,6 +20,7 @@ Une version hébergée existe sur la plateforme [LeStudio](https://lestudio.qlaf
 
 - Envoyez tout type de contenu (audio, vidéo, image, texte) sur le stream
 - Générez un audio de bot à jouer sur le stream
+- **NOUVEAU:** Panneau de Contrôle Média - Une interface web pour envoyer facilement des fichiers média au stream sans utiliser les commandes Discord
 
 ### Commandes Discord
 
@@ -29,6 +30,23 @@ Une version hébergée existe sur la plateforme [LeStudio](https://lestudio.qlaf
 - `/cmsg` -> Envoyez du contenu au flux (mais caché 😈)
 - `/dire` -> Demandez à un bot de dire quelque chose
 - `/cire` -> Demandez à un bot de dire quelque chose (mais caché 😈)
+
+### Panneau de Contrôle Média
+
+Le Panneau de Contrôle Média est une interface web qui vous permet d'envoyer des fichiers média directement à votre stream sans utiliser les commandes Discord.
+
+**Comment y accéder:**
+- Naviguez vers `http://localhost:3000/control` (ou votre API_URL + `/control`)
+- Entrez votre Discord Guild ID (ID du Serveur)
+- Soit:
+  - Entrez un chemin de dossier contenant vos fichiers média et cliquez sur "Load Folder"
+  - Téléchargez des fichiers média directement depuis votre ordinateur
+
+**Fonctionnalités:**
+- Parcourez et affichez les fichiers média d'un dossier personnalisé
+- Téléchargez des fichiers média directement depuis votre navigateur
+- Cliquez sur n'importe quel fichier média pour l'envoyer instantanément à votre stream
+- Fonctionne en parallèle avec les commandes Discord - choisissez ce qui est le plus pratique
 
 ### Customisation
 
@@ -123,6 +141,7 @@ An hosted version exist on [LeStudio](https://lestudio.qlaffont.com) !
 
 - Send any type of content (audio, video, image, text) to the stream
 - Generate a bot audio to be played on stream
+- **NEW:** Media Control Panel - A web interface to easily send media files to stream without using Discord commands
 
 ### Discord Commands
 
@@ -132,6 +151,23 @@ An hosted version exist on [LeStudio](https://lestudio.qlaffont.com) !
 - `/hsend` -> Send content to stream (but hided 😈)
 - `/talk` -> Ask a bot to say something
 - `/htalk` -> Ask a bot to say something (but hided 😈)
+
+### Media Control Panel
+
+The Media Control Panel is a web-based interface that allows you to send media files directly to your stream without using Discord commands. 
+
+**How to access:**
+- Navigate to `http://localhost:3000/control` (or your API_URL + `/control`)
+- Enter your Discord Guild ID (Server ID)
+- Either:
+  - Enter a folder path containing your media files and click "Load Folder"
+  - Upload media files directly from your computer
+
+**Features:**
+- Browse and display media files from a custom folder
+- Upload media files directly from your browser
+- Click on any media file to instantly send it to your stream
+- Works alongside Discord commands - choose whichever is more convenient
 
 ### Customisation
 

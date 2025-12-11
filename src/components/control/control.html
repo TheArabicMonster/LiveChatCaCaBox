@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>LiveChatCCB - Media Control Panel</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+    integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .media-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .media-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .media-thumbnail {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: #f3f4f6;
+    }
+    
+    /* View size styles */
+    .view-small .media-thumbnail { height: 100px; }
+    .view-small .media-card h3 { font-size: 0.875rem; }
+    .view-small .media-card button { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    .view-small .media-card svg { width: 1rem; height: 1rem; }
+    
+    .view-medium .media-thumbnail { height: 200px; }
+    
+    .view-large .media-thumbnail { height: 300px; }
+    .view-large .media-card h3 { font-size: 1.125rem; }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">Media Control Panel</h1>
+      <p class="text-gray-600">Select media files to display on stream</p>
+    </header>
+
+    <!-- Connection Status -->
+    <div id="connection-status" class="mb-6 p-4 rounded-lg bg-yellow-100 border border-yellow-300">
+      <p class="text-yellow-800">
+        <span id="status-icon">⏳</span>
+        <span id="status-text">Connecting...</span>
+      </p>
+    </div>
+
+    <!-- Guild ID Input -->
+    <div class="mb-6 bg-white rounded-lg shadow p-6">
+      <label for="guild-id" class="block text-sm font-medium text-gray-700 mb-2">
+        Discord Guild ID (Server ID)
+      </label>
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="guild-id" 
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Enter your Discord Server ID"
+        >
+        <button 
+          id="connect-btn"
+          class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        >
+          Connect
+        </button>
+      </div>
+      <p class="mt-2 text-sm text-gray-500">
+        You can find your Guild ID by enabling Developer Mode in Discord and right-clicking your server
+      </p>
+    </div>
+
+    <!-- Quick Actions Bar -->
+    <div class="mb-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-lg p-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button 
+          onclick="toggleSection('media-source')"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          📁 Load Media
+        </button>
+        <button 
+          onclick="toggleSection('send-url')"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          🌐 Send URL
+        </button>
+        <button 
+          onclick="toggleSection('tts-section')"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          🔊 TTS
+        </button>
+        <button 
+          id="settings-btn"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          ⚙️ Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- Media Source Section (Collapsible) -->
+    <div id="media-source" class="mb-6 bg-white rounded-lg shadow p-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">📁 Load Media Files</h2>
+      
+      <div class="space-y-4">
+        <!-- Folder Path -->
+        <div>
+          <label for="folder-path" class="block text-sm font-medium text-gray-700 mb-2">
+            Custom Media Folder Path
+          </label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="folder-path" 
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="/path/to/your/media/folder"
+            >
+            <button 
+              id="load-folder-btn"
+              class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition whitespace-nowrap"
+            >
+              Load Folder
+            </button>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Or Upload Media Files
+          </label>
+          <input 
+            type="file" 
+            id="file-upload" 
+            accept="image/*,video/*"
+            multiple
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Send URL Section (Collapsible) -->
+    <div id="send-url" class="mb-6 bg-white rounded-lg shadow p-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">🌐 Send Media from URL</h2>
+      
+      <div class="space-y-4">
+        <!-- Media URL Input -->
+        <div>
+          <label for="media-url" class="block text-sm font-medium text-gray-700 mb-2">
+            Media URL
+          </label>
+          <input 
+            type="url" 
+            id="media-url" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://example.com/image.jpg or video URL"
+          >
+        </div>
+
+        <!-- Text Overlay Input -->
+        <div>
+          <label for="media-text" class="block text-sm font-medium text-gray-700 mb-2">
+            Text Overlay (Optional)
+          </label>
+          <textarea 
+            id="media-text" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            rows="2"
+            placeholder="Text to display with the media..."
+          ></textarea>
+        </div>
+
+        <!-- File Upload Alternative -->
+        <div>
+          <label for="media-file-upload" class="block text-sm font-medium text-gray-700 mb-2">
+            Or Upload File
+          </label>
+          <input 
+            type="file" 
+            id="media-file-upload" 
+            accept="image/*,video/*"
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          >
+        </div>
+
+        <!-- Send Buttons -->
+        <div class="flex gap-2">
+          <button 
+            id="send-media-btn"
+            class="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold"
+          >
+            📤 Send to Stream
+          </button>
+          <button 
+            id="send-media-hidden-btn"
+            class="flex-1 px-6 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-semibold"
+            title="Send without showing username"
+          >
+            📤 Send (Hidden)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TTS Section (Collapsible) -->
+    <div id="tts-section" class="mb-6 bg-white rounded-lg shadow p-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">🔊 Text-to-Speech</h2>
+      
+      <div class="space-y-4">
+        <textarea 
+          id="tts-text" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          rows="3"
+          placeholder="Enter text to speak on stream..."
+        ></textarea>
+        <div class="flex gap-2">
+          <button 
+            id="tts-speak-btn"
+            class="flex-1 px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-semibold"
+          >
+            🔊 Speak
+          </button>
+          <button 
+            id="tts-speak-hidden-btn"
+            class="flex-1 px-6 py-3 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition font-semibold"
+            title="Speak without showing username"
+          >
+            🔊 Speak (Hidden)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stop Button (Always Visible) -->
+    <div class="mb-6">
+      <button 
+        id="stop-btn"
+        class="w-full px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold shadow"
+      >
+        ⏹️ Stop Current Media
+      </button>
+    </div>
+
+    <!-- Media Controls -->
+    <div class="mb-6 bg-white rounded-lg shadow p-6">
+      <div class="flex flex-col md:flex-row gap-4 items-center">
+        <!-- Search Bar -->
+        <div class="flex-1 w-full">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search files..."
+          >
+        </div>
+        
+        <!-- Sort By -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Sort by:</label>
+          <select 
+            id="sort-select" 
+            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="type-asc">Type</option>
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+          </select>
+        </div>
+        
+        <!-- View Size Controls -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 whitespace-nowrap">View:</label>
+          <div class="flex gap-1 border border-gray-300 rounded-lg p-1">
+            <button 
+              id="view-small" 
+              class="view-btn px-3 py-1 rounded hover:bg-gray-200 transition"
+              title="Small icons"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+            </button>
+            <button 
+              id="view-medium" 
+              class="view-btn px-3 py-1 rounded bg-blue-100 hover:bg-gray-200 transition"
+              title="Medium icons"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="8" height="8" rx="1"></rect>
+                <rect x="13" y="3" width="8" height="8" rx="1"></rect>
+                <rect x="3" y="13" width="8" height="8" rx="1"></rect>
+                <rect x="13" y="13" width="8" height="8" rx="1"></rect>
+              </svg>
+            </button>
+            <button 
+              id="view-large" 
+              class="view-btn px-3 py-1 rounded hover:bg-gray-200 transition"
+              title="Large icons"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="4" y="4" width="7" height="7" rx="1"></rect>
+                <rect x="13" y="4" width="7" height="7" rx="1"></rect>
+                <rect x="4" y="13" width="7" height="7" rx="1"></rect>
+                <rect x="13" y="13" width="7" height="7" rx="1"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Grid -->
+    <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div class="col-span-full text-center py-12 text-gray-500">
+        <p class="text-lg">No media files loaded yet</p>
+        <p class="text-sm mt-2">Enter a folder path or upload files to get started</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div id="rename-modal" class="modal">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Rename File</h2>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Current Name</label>
+        <p id="current-filename" class="text-gray-600 mb-4 break-all"></p>
+        <label for="new-filename" class="block text-sm font-medium text-gray-700 mb-2">New Name</label>
+        <input 
+          type="text" 
+          id="new-filename" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Enter new filename"
+        >
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button 
+          id="cancel-rename"
+          class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+        >
+          Cancel
+        </button>
+        <button 
+          id="confirm-rename"
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        >
+          Rename
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Stream Settings</h2>
+      <div class="space-y-4 mb-4">
+        <!-- Default Media Time -->
+        <div>
+          <label for="default-time" class="block text-sm font-medium text-gray-700 mb-2">
+            Default Media Duration (seconds)
+          </label>
+          <input 
+            type="number" 
+            id="default-time" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="e.g., 10"
+            min="1"
+          >
+          <p class="text-xs text-gray-500 mt-1">Leave empty for auto-detection</p>
+        </div>
+
+        <!-- Max Media Time -->
+        <div>
+          <label for="max-time" class="block text-sm font-medium text-gray-700 mb-2">
+            Maximum Media Duration (seconds)
+          </label>
+          <input 
+            type="number" 
+            id="max-time" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="e.g., 30"
+            min="1"
+          >
+          <p class="text-xs text-gray-500 mt-1">Leave empty for no limit</p>
+        </div>
+
+        <!-- Display Full -->
+        <div>
+          <label class="flex items-center">
+            <input 
+              type="checkbox" 
+              id="display-full" 
+              class="mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            >
+            <span class="text-sm font-medium text-gray-700">Display media in fullscreen mode</span>
+          </label>
+        </div>
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button 
+          id="cancel-settings"
+          class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+        >
+          Cancel
+        </button>
+        <button 
+          id="save-settings"
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        >
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send with Text Modal -->
+  <div id="send-with-text-modal" class="modal">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Send Media with Text</h2>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Selected File</label>
+        <p id="send-with-text-filename" class="text-gray-600 mb-4 break-all font-semibold"></p>
+        
+        <label for="send-with-text-input" class="block text-sm font-medium text-gray-700 mb-2">Text Overlay (Optional)</label>
+        <textarea 
+          id="send-with-text-input" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          rows="3"
+          placeholder="Enter text to display with the media..."
+        ></textarea>
+        <p class="text-xs text-gray-500 mt-1">This text will appear on screen with your media</p>
+      </div>
+      <div class="flex gap-2">
+        <button 
+          id="cancel-send-with-text"
+          class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+        >
+          Cancel
+        </button>
+        <button 
+          id="confirm-send-with-text"
+          class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold"
+        >
+          📤 Send
+        </button>
+        <button 
+          id="confirm-send-with-text-hidden"
+          class="flex-1 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-semibold"
+          title="Send without showing username"
+        >
+          📤 Hidden
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let socket = null;
+    let currentGuildId = null;
+    let uploadedFiles = new Map();
+    let currentFolderPath = null;
+    let currentRenameFile = null;
+    let allMediaFiles = [];
+    let currentViewSize = 'medium';
+    let currentSort = 'name-asc';
+    let currentSearchTerm = '';
+
+    // Initialize Socket.IO connection
+    function initializeSocket() {
+      socket = io({
+        'reconnection': true,
+        'reconnectionDelay': 1000,
+        'reconnectionDelayMax': 5000,
+        'reconnectionAttempts': 999
+      });
+
+      socket.on('connect', () => {
+        updateConnectionStatus('connected', 'Connected to server');
+      });
+
+      socket.on('disconnect', () => {
+        updateConnectionStatus('disconnected', 'Disconnected from server');
+      });
+
+      socket.on('media-sent', (data) => {
+        console.log('Media sent successfully:', data);
+        showNotification('Media sent successfully!', 'success');
+      });
+
+      socket.on('error', (error) => {
+        console.error('Socket error:', error);
+        showNotification('Error: ' + error.message, 'error');
+      });
+    }
+
+    // Update connection status UI
+    function updateConnectionStatus(status, text) {
+      const statusDiv = document.getElementById('connection-status');
+      const statusIcon = document.getElementById('status-icon');
+      const statusText = document.getElementById('status-text');
+
+      statusText.textContent = text;
+
+      if (status === 'connected') {
+        statusDiv.className = 'mb-6 p-4 rounded-lg bg-green-100 border border-green-300';
+        statusIcon.textContent = '✓';
+        statusText.className = 'text-green-800';
+      } else if (status === 'disconnected') {
+        statusDiv.className = 'mb-6 p-4 rounded-lg bg-red-100 border border-red-300';
+        statusIcon.textContent = '✗';
+        statusText.className = 'text-red-800';
+      } else {
+        statusDiv.className = 'mb-6 p-4 rounded-lg bg-yellow-100 border border-yellow-300';
+        statusIcon.textContent = '⏳';
+        statusText.className = 'text-yellow-800';
+      }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+      notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Connect to guild
+    document.getElementById('connect-btn').addEventListener('click', () => {
+      const guildId = document.getElementById('guild-id').value.trim();
+      if (!guildId) {
+        showNotification('Please enter a Guild ID', 'error');
+        return;
+      }
+
+      currentGuildId = guildId;
+      if (socket) {
+        socket.emit('join-room', `messages-${guildId}`);
+        showNotification('Connected to guild: ' + guildId, 'success');
+      }
+    });
+
+    // Load folder
+    document.getElementById('load-folder-btn').addEventListener('click', async () => {
+      const folderPath = document.getElementById('folder-path').value.trim();
+      if (!folderPath) {
+        showNotification('Please enter a folder path', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/control/media-files?folderPath=${encodeURIComponent(folderPath)}`);
+        if (!response.ok) {
+          throw new Error('Failed to load folder');
+        }
+
+        const data = await response.json();
+        currentFolderPath = folderPath; // Store the current folder path
+        displayMediaFiles(data.files);
+        showNotification(`Loaded ${data.files.length} files`, 'success');
+      } catch (error) {
+        console.error('Error loading folder:', error);
+        showNotification('Error loading folder: ' + error.message, 'error');
+      }
+    });
+
+    // Handle file upload
+    document.getElementById('file-upload').addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      files.forEach((file) => {
+        const url = URL.createObjectURL(file);
+        uploadedFiles.set(file.name, { file, url, type: file.type });
+      });
+
+      displayUploadedFiles();
+      showNotification(`Uploaded ${files.length} file(s)`, 'success');
+    });
+
+    // Display uploaded files
+    function displayUploadedFiles() {
+      const mediaFiles = Array.from(uploadedFiles.values()).map(({ file, url, type }) => ({
+        name: file.name,
+        path: url,
+        type: type.startsWith('video') ? 'video' : 'image',
+        isUploaded: true
+      }));
+
+      displayMediaFiles(mediaFiles);
+    }
+
+    // HTML escape function to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Escape for JavaScript string context
+    function escapeJs(text) {
+      return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+    }
+
+    // Filter and sort media files
+    function filterAndSortFiles(files) {
+      let filtered = files;
+      
+      // Apply search filter
+      if (currentSearchTerm) {
+        filtered = filtered.filter(file => 
+          file.name.toLowerCase().includes(currentSearchTerm.toLowerCase())
+        );
+      }
+      
+      // Apply sorting
+      filtered = [...filtered].sort((a, b) => {
+        switch (currentSort) {
+          case 'name-asc':
+            return a.name.localeCompare(b.name);
+          case 'name-desc':
+            return b.name.localeCompare(a.name);
+          case 'type-asc':
+            return a.type.localeCompare(b.type) || a.name.localeCompare(b.name);
+          case 'date-desc':
+            return (b.date || 0) - (a.date || 0);
+          case 'date-asc':
+            return (a.date || 0) - (b.date || 0);
+          default:
+            return 0;
+        }
+      });
+      
+      return filtered;
+    }
+
+    // View size configuration
+    const viewSizeConfig = {
+      small: 'view-small grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4',
+      medium: 'view-medium grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6',
+      large: 'view-large grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8'
+    };
+
+    // Display media files in grid
+    function displayMediaFiles(files, storeFiles = true) {
+      if (storeFiles) {
+        allMediaFiles = files || [];
+      }
+      
+      const filteredFiles = filterAndSortFiles(allMediaFiles);
+      const grid = document.getElementById('media-grid');
+      
+      // Update grid class based on view size
+      grid.className = viewSizeConfig[currentViewSize] || viewSizeConfig.medium;
+      
+      if (!filteredFiles || filteredFiles.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-gray-500">
+            <p class="text-lg">${allMediaFiles.length === 0 ? 'No media files loaded yet' : 'No files match your search'}</p>
+            ${allMediaFiles.length === 0 ? '<p class="text-sm mt-2">Enter a folder path or upload files to get started</p>' : ''}
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filteredFiles.map((file) => {
+        const escapedPath = escapeHtml(file.path);
+        const escapedName = escapeHtml(file.name);
+        const escapedType = escapeHtml(file.type);
+        const jsEscapedPath = escapeJs(file.path);
+        const jsEscapedName = escapeJs(file.name);
+        
+        return `
+          <div class="media-card bg-white rounded-lg shadow overflow-hidden">
+            <div class="relative cursor-pointer" onclick="sendMediaToStream('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false})">
+              ${file.type === 'video' ? 
+                `<video class="media-thumbnail" src="${escapedPath}" muted></video>
+                 <div class="absolute top-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">VIDEO</div>` :
+                `<img class="media-thumbnail" src="${escapedPath}" alt="${escapedName}">
+                 <div class="absolute top-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">IMAGE</div>`
+              }
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold text-gray-800 truncate mb-2">${escapedName}</h3>
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <button onclick="sendMediaToStream('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false})" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition text-xs font-medium">
+                  📤 Send
+                </button>
+                <button onclick="openSendWithTextModal('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false}); event.stopPropagation();" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition text-xs font-medium">
+                  📝 Send + Text
+                </button>
+              </div>
+              <button onclick="openRenameModal('${jsEscapedPath}', '${jsEscapedName}', ${file.isUploaded || false}); event.stopPropagation();" class="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition text-xs">
+                ✏️ Rename
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Send media to stream
+    async function sendMediaToStream(path, type, name, isUploaded) {
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      try {
+        let mediaUrl = path;
+
+        // If it's an uploaded file, we need to upload it to the server
+        if (isUploaded) {
+          const fileData = uploadedFiles.get(name);
+          if (!fileData) {
+            throw new Error('File not found');
+          }
+
+          const formData = new FormData();
+          formData.append('file', fileData.file);
+          formData.append('guildId', currentGuildId);
+
+          const uploadResponse = await fetch('/control/upload-media', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file');
+          }
+
+          const uploadData = await uploadResponse.json();
+          mediaUrl = uploadData.url;
+        }
+
+        // Send media to stream
+        const response = await fetch('/control/send-media', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            mediaUrl,
+            mediaType: type,
+            fileName: name
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send media to stream');
+        }
+
+        showNotification(`Sent "${name}" to stream!`, 'success');
+      } catch (error) {
+        console.error('Error sending media:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Open rename modal
+    function openRenameModal(filePath, fileName, isUploaded) {
+      currentRenameFile = { path: filePath, name: fileName, isUploaded };
+      document.getElementById('current-filename').textContent = fileName;
+      document.getElementById('new-filename').value = fileName;
+      document.getElementById('rename-modal').classList.add('active');
+      
+      // Focus on input and select filename without extension
+      const input = document.getElementById('new-filename');
+      setTimeout(() => {
+        input.focus();
+        const lastDot = fileName.lastIndexOf('.');
+        if (lastDot > 0) {
+          input.setSelectionRange(0, lastDot);
+        } else {
+          input.select();
+        }
+      }, 100);
+    }
+
+    // Close rename modal
+    function closeRenameModal() {
+      document.getElementById('rename-modal').classList.remove('active');
+      currentRenameFile = null;
+    }
+
+    // Perform file rename
+    async function renameFile() {
+      if (!currentRenameFile) return;
+
+      const newName = document.getElementById('new-filename').value.trim();
+      if (!newName) {
+        showNotification('Please enter a new filename', 'error');
+        return;
+      }
+
+      if (newName === currentRenameFile.name) {
+        closeRenameModal();
+        return;
+      }
+
+      try {
+        const response = await fetch('/control/rename-file', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            oldPath: currentRenameFile.path,
+            newName: newName,
+            folderPath: currentFolderPath,
+            isUploaded: currentRenameFile.isUploaded
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to rename file');
+        }
+
+        const result = await response.json();
+        showNotification(`File renamed successfully!`, 'success');
+        closeRenameModal();
+
+        // Reload the folder or uploaded files
+        if (currentRenameFile.isUploaded) {
+          // For uploaded files, we need to update the map
+          const fileData = uploadedFiles.get(currentRenameFile.name);
+          if (fileData) {
+            uploadedFiles.delete(currentRenameFile.name);
+            // Use the sanitized name from the server
+            uploadedFiles.set(result.newName, fileData);
+            displayUploadedFiles();
+          }
+        } else if (currentFolderPath) {
+          // Reload folder contents
+          document.getElementById('load-folder-btn').click();
+        }
+      } catch (error) {
+        console.error('Error renaming file:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Toggle section visibility
+    function toggleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      const allSections = ['media-source', 'send-url', 'tts-section'];
+      
+      // Close all other sections
+      allSections.forEach(id => {
+        if (id !== sectionId) {
+          document.getElementById(id).classList.add('hidden');
+        }
+      });
+      
+      // Toggle the clicked section
+      section.classList.toggle('hidden');
+    }
+
+    // Open send with text modal
+    let currentSendWithTextFile = null;
+    function openSendWithTextModal(path, type, name, isUploaded) {
+      currentSendWithTextFile = { path, type, name, isUploaded };
+      document.getElementById('send-with-text-filename').textContent = name;
+      document.getElementById('send-with-text-input').value = '';
+      document.getElementById('send-with-text-modal').classList.add('active');
+      
+      // Focus on textarea
+      setTimeout(() => {
+        document.getElementById('send-with-text-input').focus();
+      }, 100);
+    }
+
+    // Close send with text modal
+    function closeSendWithTextModal() {
+      document.getElementById('send-with-text-modal').classList.remove('active');
+      currentSendWithTextFile = null;
+    }
+
+    // Send media from folder with text overlay
+    async function sendMediaWithText(hidden = false) {
+      if (!currentSendWithTextFile) return;
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      const textOverlay = document.getElementById('send-with-text-input').value.trim();
+      const { path, type, name, isUploaded } = currentSendWithTextFile;
+
+      try {
+        let mediaUrl = path;
+
+        // If it's an uploaded file, upload it to the server
+        if (isUploaded) {
+          const fileData = uploadedFiles.get(name);
+          if (!fileData) {
+            throw new Error('File not found');
+          }
+
+          const formData = new FormData();
+          formData.append('file', fileData.file);
+          formData.append('guildId', currentGuildId);
+
+          const uploadResponse = await fetch('/control/upload-media', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file');
+          }
+
+          const uploadData = await uploadResponse.json();
+          mediaUrl = uploadData.url;
+        }
+
+        // Send media with text overlay using the send-media-with-params endpoint
+        const response = await fetch('/control/send-media-with-params', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            mediaUrl,
+            text: textOverlay || undefined,
+            hidden: hidden
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send media to stream');
+        }
+
+        showNotification(`Media ${hidden ? '(hidden) ' : ''}sent to stream${textOverlay ? ' with text overlay' : ''}!`, 'success');
+        closeSendWithTextModal();
+      } catch (error) {
+        console.error('Error sending media with text:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Send media with parameters function
+    async function sendMediaWithParams(hidden = false) {
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      const mediaUrl = document.getElementById('media-url').value.trim();
+      const mediaText = document.getElementById('media-text').value.trim();
+      const mediaFile = document.getElementById('media-file-upload').files[0];
+
+      // Need either URL or file
+      if (!mediaUrl && !mediaFile) {
+        showNotification('Please enter a media URL or upload a file', 'error');
+        return;
+      }
+
+      try {
+        let finalMediaUrl = mediaUrl;
+
+        // If file is provided, upload it first
+        if (mediaFile) {
+          const formData = new FormData();
+          formData.append('file', mediaFile);
+          formData.append('guildId', currentGuildId);
+
+          const uploadResponse = await fetch('/control/upload-media', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadResponse.ok) {
+            const error = await uploadResponse.json();
+            throw new Error(error.error || 'Failed to upload file');
+          }
+
+          const uploadResult = await uploadResponse.json();
+          finalMediaUrl = uploadResult.url;
+        }
+
+        // Send media with parameters
+        const response = await fetch('/control/send-media-with-params', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            mediaUrl: finalMediaUrl,
+            text: mediaText || undefined,
+            hidden: hidden
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to send media');
+        }
+
+        showNotification(`Media ${hidden ? '(hidden)' : ''} sent to stream!`, 'success');
+        
+        // Clear inputs
+        document.getElementById('media-url').value = '';
+        document.getElementById('media-text').value = '';
+        document.getElementById('media-file-upload').value = '';
+      } catch (error) {
+        console.error('Error sending media with params:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Text-to-Speech function
+    async function sendTextToSpeech(text, hidden = false) {
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      if (!text || !text.trim()) {
+        showNotification('Please enter text to speak', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/control/text-to-speech', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            text: text.trim(),
+            hidden: hidden
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to send text-to-speech');
+        }
+
+        showNotification(`Text-to-speech ${hidden ? '(hidden)' : ''} sent to stream!`, 'success');
+        document.getElementById('tts-text').value = '';
+      } catch (error) {
+        console.error('Error sending text-to-speech:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Stop current media function
+    async function stopCurrentMedia() {
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/control/stop', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to stop media');
+        }
+
+        showNotification('Current media stopped!', 'success');
+      } catch (error) {
+        console.error('Error stopping media:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Settings modal functions
+    function openSettingsModal() {
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+      
+      // Load current settings
+      loadCurrentSettings();
+      document.getElementById('settings-modal').classList.add('active');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.remove('active');
+    }
+
+    async function loadCurrentSettings() {
+      try {
+        const response = await fetch(`/control/settings?guildId=${encodeURIComponent(currentGuildId)}`);
+        if (response.ok) {
+          const settings = await response.json();
+          document.getElementById('default-time').value = settings.defaultMediaTime || '';
+          document.getElementById('max-time').value = settings.maxMediaTime || '';
+          document.getElementById('display-full').checked = settings.displayFull || false;
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+
+    async function saveSettings() {
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      const defaultTime = document.getElementById('default-time').value;
+      const maxTime = document.getElementById('max-time').value;
+      const displayFull = document.getElementById('display-full').checked;
+
+      try {
+        const response = await fetch('/control/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            defaultMediaTime: defaultTime ? parseInt(defaultTime) : null,
+            maxMediaTime: maxTime ? parseInt(maxTime) : null,
+            displayFull: displayFull
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to save settings');
+        }
+
+        showNotification('Settings saved successfully!', 'success');
+        closeSettingsModal();
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeSocket();
+      
+      // Search functionality
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value;
+        displayMediaFiles(null, false);
+      });
+      
+      // Sort functionality
+      document.getElementById('sort-select').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        displayMediaFiles(null, false);
+      });
+      
+      // View size controls
+      const viewButtons = {
+        'view-small': 'small',
+        'view-medium': 'medium',
+        'view-large': 'large'
+      };
+      
+      Object.keys(viewButtons).forEach(btnId => {
+        document.getElementById(btnId).addEventListener('click', () => {
+          currentViewSize = viewButtons[btnId];
+          
+          // Update button states
+          document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-100');
+          });
+          document.getElementById(btnId).classList.add('bg-blue-100');
+          
+          displayMediaFiles(null, false);
+        });
+      });
+      
+      // Send media with parameters event listeners
+      document.getElementById('send-media-btn').addEventListener('click', () => {
+        sendMediaWithParams(false);
+      });
+      
+      document.getElementById('send-media-hidden-btn').addEventListener('click', () => {
+        sendMediaWithParams(true);
+      });
+      
+      // Stream controls event listeners
+      document.getElementById('tts-speak-btn').addEventListener('click', () => {
+        const text = document.getElementById('tts-text').value;
+        sendTextToSpeech(text, false);
+      });
+      
+      document.getElementById('tts-speak-hidden-btn').addEventListener('click', () => {
+        const text = document.getElementById('tts-text').value;
+        sendTextToSpeech(text, true);
+      });
+      
+      document.getElementById('stop-btn').addEventListener('click', stopCurrentMedia);
+      document.getElementById('settings-btn').addEventListener('click', openSettingsModal);
+      
+      // Settings modal event listeners
+      document.getElementById('cancel-settings').addEventListener('click', closeSettingsModal);
+      document.getElementById('save-settings').addEventListener('click', saveSettings);
+      document.getElementById('settings-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'settings-modal') {
+          closeSettingsModal();
+        }
+      });
+      
+      // Rename modal event listeners
+      document.getElementById('cancel-rename').addEventListener('click', closeRenameModal);
+      document.getElementById('confirm-rename').addEventListener('click', renameFile);
+      document.getElementById('rename-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'rename-modal') {
+          closeRenameModal();
+        }
+      });
+      document.getElementById('new-filename').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          renameFile();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeRenameModal();
+        }
+      });
+
+      // Send with text modal event listeners
+      document.getElementById('cancel-send-with-text').addEventListener('click', closeSendWithTextModal);
+      document.getElementById('confirm-send-with-text').addEventListener('click', () => sendMediaWithText(false));
+      document.getElementById('confirm-send-with-text-hidden').addEventListener('click', () => sendMediaWithText(true));
+      document.getElementById('send-with-text-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'send-with-text-modal') {
+          closeSendWithTextModal();
+        }
+      });
+      document.getElementById('send-with-text-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeSendWithTextModal();
+        }
+      });
+      
+      // Try to load guild ID from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const guildIdParam = urlParams.get('guildId');
+      if (guildIdParam) {
+        document.getElementById('guild-id').value = guildIdParam;
+        document.getElementById('connect-btn').click();
+      }
+    });
+  </script>
+</body>
+
+</html>
