@@ -68,7 +68,33 @@ The server should start on port 3000 by default.
 - [ ] Check that media appears in OBS overlay
 - [ ] Test with both images and videos
 
-### 6. Test Different File Formats
+### 6. Test File Rename Feature
+
+#### Basic Rename
+- [ ] Click the pencil icon on a media card
+- [ ] Verify rename modal opens
+- [ ] Verify current filename is displayed
+- [ ] Verify input field shows filename with auto-selection
+- [ ] Change the filename and click "Rename"
+- [ ] Verify success notification appears
+- [ ] Verify file grid updates with new name
+- [ ] Verify the actual file on disk is renamed
+
+#### Rename Keyboard Shortcuts
+- [ ] Open rename modal
+- [ ] Edit filename and press Enter
+- [ ] Verify file is renamed
+- [ ] Open rename modal again
+- [ ] Press Escape
+- [ ] Verify modal closes without renaming
+
+#### Rename Error Cases
+- [ ] Try to rename to an existing filename
+- [ ] Verify error message about duplicate name
+- [ ] Try to rename with empty name
+- [ ] Verify appropriate error handling
+
+### 7. Test Different File Formats
 
 #### Images
 - [ ] Test JPG file
@@ -82,7 +108,7 @@ The server should start on port 3000 by default.
 - [ ] Test MOV file (if available)
 - [ ] Test AVI file (if available)
 
-### 7. Test Error Handling
+### 8. Test Error Handling
 
 #### Invalid Folder Path
 - [ ] Enter a non-existent folder path
@@ -99,7 +125,7 @@ The server should start on port 3000 by default.
 - [ ] Try uploading a file over 100MB
 - [ ] Verify error message about file size
 
-### 8. Test Security
+### 9. Test Security
 
 #### Path Traversal
 - [ ] Try entering `../../../etc` as folder path
@@ -110,12 +136,14 @@ The server should start on port 3000 by default.
 - [ ] Verify it's sanitized correctly
 - [ ] Verify the file can be sent to stream
 
-### 9. Test Concurrent Usage
+### 10. Test Concurrent Usage
 - [ ] Open multiple browser tabs with control panel
 - [ ] Send media from different tabs
 - [ ] Verify queue handles multiple requests correctly
+- [ ] Rename a file in one tab
+- [ ] Verify the change reflects when reloading in another tab
 
-### 10. Test Integration with Discord Commands
+### 11. Test Integration with Discord Commands
 - [ ] Send media via Discord `/send` command
 - [ ] Send media via control panel
 - [ ] Verify both work correctly

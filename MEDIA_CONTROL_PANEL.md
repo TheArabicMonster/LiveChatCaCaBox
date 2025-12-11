@@ -6,6 +6,7 @@ The Media Control Panel is a web-based interface that allows you to send media f
 
 - **Folder Browsing**: Load and display media files from a custom folder on your system
 - **File Upload**: Upload media files directly from your browser
+- **File Rename**: Easily rename files directly from the control panel for better organization
 - **Instant Display**: Click on any media file to instantly send it to your stream
 - **Real-time Status**: See connection status and receive notifications
 - **Grid View**: Visual grid layout for easy media file browsing
@@ -45,9 +46,20 @@ You have two options:
 2. Select one or more media files from your computer
 3. The files will be uploaded and displayed in the grid
 
-### 4. Send Media to Stream
+### 4. Rename Files (Optional)
 
-1. Click on any media file in the grid
+1. Click the pencil icon (✏️) on any media card
+2. A modal will appear showing the current filename
+3. Edit the filename (the extension-free name is auto-selected)
+4. Click "Rename" or press Enter to confirm
+5. Press Escape or click "Cancel" to abort
+6. The file will be renamed on your system instantly
+
+**Note**: The rename feature works for both folder files and uploaded files. It validates that no duplicate names exist and sanitizes the filename for security.
+
+### 5. Send Media to Stream
+
+1. Click "Send to Stream" button or the media thumbnail
 2. The file will be automatically sent to your stream
 3. You'll receive a confirmation notification
 4. The media will appear on your OBS overlay
