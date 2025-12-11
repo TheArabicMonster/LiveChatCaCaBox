@@ -30,12 +30,22 @@ function sanitizeFilename(filename: string): string {
 
 // Validate folder path to prevent directory traversal
 function isPathSafe(folderPath: string): boolean {
+  // Resolve the path to normalize it
   const resolvedPath = resolve(folderPath);
-  // Only allow paths that don't try to escape outside reasonable boundaries
-  // This is a basic check - in production, you'd want to whitelist specific directories
-  if (resolvedPath.includes('..')) {
+  
+  // Check for common directory traversal patterns
+  const dangerousPatterns = ['..', '~', '$'];
+  for (const pattern of dangerousPatterns) {
+    if (folderPath.includes(pattern)) {
+      return false;
+    }
+  }
+  
+  // Additional check: ensure the path is absolute and doesn't go up
+  if (!folderPath.startsWith('/') && !folderPath.match(/^[A-Z]:\\/i)) {
     return false;
   }
+  
   return true;
 }
 
@@ -142,7 +152,10 @@ export const ControlRoutes = () =>
     // Serve uploaded files
     fastify.get('/uploads/:filename', async function (req, reply) {
       const { filename } = req.params as { filename: string };
-      const filepath = join(process.cwd(), 'uploads', filename);
+      
+      // Sanitize filename to prevent directory traversal
+      const sanitizedFilename = sanitizeFilename(filename);
+      const filepath = join(process.cwd(), 'uploads', sanitizedFilename);
 
       if (!fs.existsSync(filepath)) {
         return reply.status(404).send({ error: 'File not found' });
