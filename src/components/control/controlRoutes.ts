@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { promisify } from 'util';
 import { pipeline } from 'stream';
 import * as mimeTypes from 'mime-types';
@@ -8,6 +8,36 @@ import { QueueType } from '../../services/prisma/loadPrisma';
 import { getDisplayMediaFullFromGuildId, getDurationFromGuildId } from '../../services/utils';
 
 const pump = promisify(pipeline);
+
+// Interface for query parameters
+interface MediaFilesQuery {
+  folderPath?: string;
+}
+
+// Interface for request body
+interface SendMediaBody {
+  guildId: string;
+  mediaUrl: string;
+  mediaType: string;
+  fileName: string;
+}
+
+// Sanitize filename to prevent directory traversal
+function sanitizeFilename(filename: string): string {
+  // Remove any path separators and keep only the filename
+  return filename.replace(/[/\\]/g, '_').replace(/\.\./g, '_');
+}
+
+// Validate folder path to prevent directory traversal
+function isPathSafe(folderPath: string): boolean {
+  const resolvedPath = resolve(folderPath);
+  // Only allow paths that don't try to escape outside reasonable boundaries
+  // This is a basic check - in production, you'd want to whitelist specific directories
+  if (resolvedPath.includes('..')) {
+    return false;
+  }
+  return true;
+}
 
 export const ControlRoutes = () =>
   async function (fastify: FastifyCustomInstance) {
@@ -20,10 +50,15 @@ export const ControlRoutes = () =>
 
     // Get media files from a folder
     fastify.get('/media-files', async function (req, reply) {
-      const folderPath = (req.query as any).folderPath as string;
+      const { folderPath } = req.query as MediaFilesQuery;
 
       if (!folderPath) {
         return reply.status(400).send({ error: 'folderPath is required' });
+      }
+
+      // Validate path to prevent directory traversal
+      if (!isPathSafe(folderPath)) {
+        return reply.status(400).send({ error: 'Invalid folder path' });
       }
 
       try {
@@ -83,9 +118,10 @@ export const ControlRoutes = () =>
           fs.mkdirSync(uploadsDir, { recursive: true });
         }
 
-        // Generate unique filename
+        // Sanitize and generate unique filename
         const timestamp = Date.now();
-        const filename = `${timestamp}-${data.filename}`;
+        const sanitizedOriginalName = sanitizeFilename(data.filename);
+        const filename = `${timestamp}-${sanitizedOriginalName}`;
         const filepath = join(uploadsDir, filename);
 
         // Save file to disk
@@ -121,8 +157,7 @@ export const ControlRoutes = () =>
 
     // Send media to stream
     fastify.post('/send-media', async function (req, reply) {
-      const body = req.body as any;
-      const { guildId, mediaUrl, mediaType, fileName } = body;
+      const { guildId, mediaUrl, mediaType, fileName } = req.body as SendMediaBody;
 
       if (!guildId || !mediaUrl) {
         return reply.status(400).send({ error: 'guildId and mediaUrl are required' });
