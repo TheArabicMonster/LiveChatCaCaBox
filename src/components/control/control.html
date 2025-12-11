@@ -90,45 +90,81 @@
       </p>
     </div>
 
-    <!-- Folder Path Configuration -->
-    <div class="mb-6 bg-white rounded-lg shadow p-6">
-      <label for="folder-path" class="block text-sm font-medium text-gray-700 mb-2">
-        Custom Media Folder Path
-      </label>
-      <div class="flex gap-2">
-        <input 
-          type="text" 
-          id="folder-path" 
-          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          placeholder="/path/to/your/media/folder"
-        >
+    <!-- Quick Actions Bar -->
+    <div class="mb-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-lg p-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <button 
-          id="load-folder-btn"
-          class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+          onclick="toggleSection('media-source')"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
         >
-          Load Folder
+          📁 Load Media
+        </button>
+        <button 
+          onclick="toggleSection('send-url')"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          🌐 Send URL
+        </button>
+        <button 
+          onclick="toggleSection('tts-section')"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          🔊 TTS
+        </button>
+        <button 
+          id="settings-btn"
+          class="bg-white text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+        >
+          ⚙️ Settings
         </button>
       </div>
     </div>
 
-    <!-- File Upload Section -->
-    <div class="mb-6 bg-white rounded-lg shadow p-6">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        Or Upload Media Files
-      </label>
-      <input 
-        type="file" 
-        id="file-upload" 
-        accept="image/*,video/*"
-        multiple
-        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-      >
+    <!-- Media Source Section (Collapsible) -->
+    <div id="media-source" class="mb-6 bg-white rounded-lg shadow p-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">📁 Load Media Files</h2>
+      
+      <div class="space-y-4">
+        <!-- Folder Path -->
+        <div>
+          <label for="folder-path" class="block text-sm font-medium text-gray-700 mb-2">
+            Custom Media Folder Path
+          </label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="folder-path" 
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="/path/to/your/media/folder"
+            >
+            <button 
+              id="load-folder-btn"
+              class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition whitespace-nowrap"
+            >
+              Load Folder
+            </button>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Or Upload Media Files
+          </label>
+          <input 
+            type="file" 
+            id="file-upload" 
+            accept="image/*,video/*"
+            multiple
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          >
+        </div>
+      </div>
     </div>
 
-    <!-- Send Media with Parameters -->
-    <div class="mb-6 bg-white rounded-lg shadow p-6">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Send Media with Parameters</h2>
-      <p class="text-sm text-gray-600 mb-4">Send media from URL or upload with optional text overlay (like /send and /hsend commands)</p>
+    <!-- Send URL Section (Collapsible) -->
+    <div id="send-url" class="mb-6 bg-white rounded-lg shadow p-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">🌐 Send Media from URL</h2>
       
       <div class="space-y-4">
         <!-- Media URL Input -->
@@ -142,7 +178,6 @@
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="https://example.com/image.jpg or video URL"
           >
-          <p class="text-xs text-gray-500 mt-1">Required if no file is uploaded</p>
         </div>
 
         <!-- Text Overlay Input -->
@@ -190,56 +225,43 @@
       </div>
     </div>
 
-    <!-- Stream Controls -->
-    <div class="mb-6 bg-white rounded-lg shadow p-6">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Stream Controls</h2>
+    <!-- TTS Section (Collapsible) -->
+    <div id="tts-section" class="mb-6 bg-white rounded-lg shadow p-6 hidden">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">🔊 Text-to-Speech</h2>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Text-to-Speech Section -->
-        <div class="border border-gray-200 rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Text-to-Speech</h3>
-          <textarea 
-            id="tts-text" 
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-2"
-            rows="3"
-            placeholder="Enter text to speak..."
-          ></textarea>
-          <div class="flex gap-2">
-            <button 
-              id="tts-speak-btn"
-              class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition text-sm"
-            >
-              🔊 Speak
-            </button>
-            <button 
-              id="tts-speak-hidden-btn"
-              class="flex-1 px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition text-sm"
-              title="Speak without showing username"
-            >
-              🔊 Speak (Hidden)
-            </button>
-          </div>
-        </div>
-
-        <!-- Quick Actions Section -->
-        <div class="border border-gray-200 rounded-lg p-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Quick Actions</h3>
-          <div class="space-y-2">
-            <button 
-              id="stop-btn"
-              class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              ⏹️ Stop Current Media
-            </button>
-            <button 
-              id="settings-btn"
-              class="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-            >
-              ⚙️ Stream Settings
-            </button>
-          </div>
+      <div class="space-y-4">
+        <textarea 
+          id="tts-text" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          rows="3"
+          placeholder="Enter text to speak on stream..."
+        ></textarea>
+        <div class="flex gap-2">
+          <button 
+            id="tts-speak-btn"
+            class="flex-1 px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-semibold"
+          >
+            🔊 Speak
+          </button>
+          <button 
+            id="tts-speak-hidden-btn"
+            class="flex-1 px-6 py-3 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition font-semibold"
+            title="Speak without showing username"
+          >
+            🔊 Speak (Hidden)
+          </button>
         </div>
       </div>
+    </div>
+
+    <!-- Stop Button (Always Visible) -->
+    <div class="mb-6">
+      <button 
+        id="stop-btn"
+        class="w-full px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold shadow"
+      >
+        ⏹️ Stop Current Media
+      </button>
     </div>
 
     <!-- Media Controls -->
@@ -415,6 +437,47 @@
           class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
         >
           Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send with Text Modal -->
+  <div id="send-with-text-modal" class="modal">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Send Media with Text</h2>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Selected File</label>
+        <p id="send-with-text-filename" class="text-gray-600 mb-4 break-all font-semibold"></p>
+        
+        <label for="send-with-text-input" class="block text-sm font-medium text-gray-700 mb-2">Text Overlay (Optional)</label>
+        <textarea 
+          id="send-with-text-input" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          rows="3"
+          placeholder="Enter text to display with the media..."
+        ></textarea>
+        <p class="text-xs text-gray-500 mt-1">This text will appear on screen with your media</p>
+      </div>
+      <div class="flex gap-2">
+        <button 
+          id="cancel-send-with-text"
+          class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+        >
+          Cancel
+        </button>
+        <button 
+          id="confirm-send-with-text"
+          class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold"
+        >
+          📤 Send
+        </button>
+        <button 
+          id="confirm-send-with-text-hidden"
+          class="flex-1 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition font-semibold"
+          title="Send without showing username"
+        >
+          📤 Hidden
         </button>
       </div>
     </div>
@@ -650,16 +713,17 @@
             </div>
             <div class="p-4">
               <h3 class="font-semibold text-gray-800 truncate mb-2">${escapedName}</h3>
-              <div class="flex gap-2">
-                <button onclick="sendMediaToStream('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false})" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition text-sm">
-                  Send to Stream
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <button onclick="sendMediaToStream('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false})" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition text-xs font-medium">
+                  📤 Send
                 </button>
-                <button onclick="openRenameModal('${jsEscapedPath}', '${jsEscapedName}', ${file.isUploaded || false}); event.stopPropagation();" class="bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300 transition text-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
+                <button onclick="openSendWithTextModal('${jsEscapedPath}', '${escapedType}', '${jsEscapedName}', ${file.isUploaded || false}); event.stopPropagation();" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition text-xs font-medium">
+                  📝 Send + Text
                 </button>
               </div>
+              <button onclick="openRenameModal('${jsEscapedPath}', '${jsEscapedName}', ${file.isUploaded || false}); event.stopPropagation();" class="w-full bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition text-xs">
+                ✏️ Rename
+              </button>
             </div>
           </div>
         `;
@@ -805,6 +869,106 @@
         }
       } catch (error) {
         console.error('Error renaming file:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    // Toggle section visibility
+    function toggleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      const allSections = ['media-source', 'send-url', 'tts-section'];
+      
+      // Close all other sections
+      allSections.forEach(id => {
+        if (id !== sectionId) {
+          document.getElementById(id).classList.add('hidden');
+        }
+      });
+      
+      // Toggle the clicked section
+      section.classList.toggle('hidden');
+    }
+
+    // Open send with text modal
+    let currentSendWithTextFile = null;
+    function openSendWithTextModal(path, type, name, isUploaded) {
+      currentSendWithTextFile = { path, type, name, isUploaded };
+      document.getElementById('send-with-text-filename').textContent = name;
+      document.getElementById('send-with-text-input').value = '';
+      document.getElementById('send-with-text-modal').classList.add('active');
+      
+      // Focus on textarea
+      setTimeout(() => {
+        document.getElementById('send-with-text-input').focus();
+      }, 100);
+    }
+
+    // Close send with text modal
+    function closeSendWithTextModal() {
+      document.getElementById('send-with-text-modal').classList.remove('active');
+      currentSendWithTextFile = null;
+    }
+
+    // Send media from folder with text overlay
+    async function sendMediaWithText(hidden = false) {
+      if (!currentSendWithTextFile) return;
+      if (!currentGuildId) {
+        showNotification('Please connect to a guild first', 'error');
+        return;
+      }
+
+      const textOverlay = document.getElementById('send-with-text-input').value.trim();
+      const { path, type, name, isUploaded } = currentSendWithTextFile;
+
+      try {
+        let mediaUrl = path;
+
+        // If it's an uploaded file, upload it to the server
+        if (isUploaded) {
+          const fileData = uploadedFiles.get(name);
+          if (!fileData) {
+            throw new Error('File not found');
+          }
+
+          const formData = new FormData();
+          formData.append('file', fileData.file);
+          formData.append('guildId', currentGuildId);
+
+          const uploadResponse = await fetch('/control/upload-media', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file');
+          }
+
+          const uploadData = await uploadResponse.json();
+          mediaUrl = uploadData.url;
+        }
+
+        // Send media with text overlay using the send-media-with-params endpoint
+        const response = await fetch('/control/send-media-with-params', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            mediaUrl,
+            text: textOverlay || undefined,
+            hidden: hidden
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send media to stream');
+        }
+
+        showNotification(`Media ${hidden ? '(hidden) ' : ''}sent to stream${textOverlay ? ' with text overlay' : ''}!`, 'success');
+        closeSendWithTextModal();
+      } catch (error) {
+        console.error('Error sending media with text:', error);
         showNotification('Error: ' + error.message, 'error');
       }
     }
@@ -1099,6 +1263,22 @@
         } else if (e.key === 'Escape') {
           e.preventDefault();
           closeRenameModal();
+        }
+      });
+
+      // Send with text modal event listeners
+      document.getElementById('cancel-send-with-text').addEventListener('click', closeSendWithTextModal);
+      document.getElementById('confirm-send-with-text').addEventListener('click', () => sendMediaWithText(false));
+      document.getElementById('confirm-send-with-text-hidden').addEventListener('click', () => sendMediaWithText(true));
+      document.getElementById('send-with-text-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'send-with-text-modal') {
+          closeSendWithTextModal();
+        }
+      });
+      document.getElementById('send-with-text-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeSendWithTextModal();
         }
       });
       
