@@ -6,6 +6,7 @@ import * as mimeTypes from 'mime-types';
 import { getContentInformationsFromUrl } from '../../services/content-utils';
 import { QueueType } from '../../services/prisma/loadPrisma';
 import { getDisplayMediaFullFromGuildId, getDurationFromGuildId } from '../../services/utils';
+import { promisedGtts, readGttsAsStream, deleteGtts } from '../../services/gtts';
 
 const pump = promisify(pipeline);
 
@@ -20,6 +21,23 @@ interface SendMediaBody {
   mediaUrl: string;
   mediaType: string;
   fileName: string;
+}
+
+interface TextToSpeechBody {
+  guildId: string;
+  text: string;
+  hidden: boolean;
+}
+
+interface StopBody {
+  guildId: string;
+}
+
+interface SettingsBody {
+  guildId: string;
+  defaultMediaTime?: number | null;
+  maxMediaTime?: number | null;
+  displayFull?: boolean;
 }
 
 // Sanitize filename to prevent directory traversal
@@ -300,6 +318,165 @@ export const ControlRoutes = () =>
       } catch (error: any) {
         logger.error('[CONTROL] Error renaming file:', error);
         return reply.status(500).send({ error: 'Failed to rename file', message: error.message });
+      }
+    });
+
+    // Text-to-speech endpoint
+    fastify.post('/text-to-speech', async function (req, reply) {
+      const { guildId, text, hidden } = req.body as TextToSpeechBody;
+
+      if (!guildId || !text) {
+        return reply.status(400).send({ error: 'guildId and text are required' });
+      }
+
+      try {
+        // Generate text-to-speech audio
+        const filePath = await promisedGtts(text, rosetty.getCurrentLang());
+        const fileStream = readGttsAsStream(filePath);
+
+        // Read the stream into a buffer
+        const chunks: Buffer[] = [];
+        for await (const chunk of fileStream) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+
+        // Upload to a temporary location (in production, use proper file hosting)
+        const timestamp = Date.now();
+        const ttsFilename = `tts-${timestamp}.mp3`;
+        const uploadsDir = join(process.cwd(), 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const ttsPath = join(uploadsDir, ttsFilename);
+        fs.writeFileSync(ttsPath, buffer);
+
+        const mediaUrl = `${env.API_URL}/control/uploads/${ttsFilename}`;
+
+        // Get audio duration
+        const additionalContent = await getContentInformationsFromUrl(mediaUrl);
+
+        // Delete the temporary gtts file
+        await deleteGtts(filePath);
+
+        // Create queue entry
+        await prisma.queue.create({
+          data: {
+            content: JSON.stringify({
+              text: hidden ? '' : text,
+              media: mediaUrl,
+              mediaContentType: 'audio/mpeg',
+              mediaDuration: Math.ceil(additionalContent?.mediaDuration || 5),
+            }),
+            type: QueueType.VOCAL,
+            discordGuildId: guildId,
+            duration: await getDurationFromGuildId(
+              additionalContent?.mediaDuration ? Math.ceil(additionalContent.mediaDuration) : undefined,
+              guildId,
+            ),
+            author: hidden ? 'Hidden User' : 'Media Control Panel',
+            authorImage: null,
+          },
+        });
+
+        logger.info(`[CONTROL] Text-to-speech sent to stream (guild: ${guildId})`);
+
+        return { success: true, message: 'Text-to-speech sent to stream' };
+      } catch (error: any) {
+        logger.error('[CONTROL] Error sending text-to-speech:', error);
+        return reply.status(500).send({ error: 'Failed to send text-to-speech', message: error.message });
+      }
+    });
+
+    // Stop current media endpoint
+    fastify.post('/stop', async function (req, reply) {
+      const { guildId } = req.body as StopBody;
+
+      if (!guildId) {
+        return reply.status(400).send({ error: 'guildId is required' });
+      }
+
+      try {
+        // Emit stop event via Socket.IO
+        fastify.io.to(`messages-${guildId}`).emit('stop');
+
+        // Update guild busyUntil
+        await prisma.guild.update({
+          where: {
+            id: guildId,
+          },
+          data: {
+            busyUntil: null,
+          },
+        });
+
+        logger.info(`[CONTROL] Stop signal sent (guild: ${guildId})`);
+
+        return { success: true, message: 'Media stopped' };
+      } catch (error: any) {
+        logger.error('[CONTROL] Error stopping media:', error);
+        return reply.status(500).send({ error: 'Failed to stop media', message: error.message });
+      }
+    });
+
+    // Get settings endpoint
+    fastify.get('/settings', async function (req, reply) {
+      const { guildId } = req.query as { guildId?: string };
+
+      if (!guildId) {
+        return reply.status(400).send({ error: 'guildId is required' });
+      }
+
+      try {
+        const guild = await prisma.guild.findUnique({
+          where: {
+            id: guildId,
+          },
+        });
+
+        return {
+          defaultMediaTime: guild?.defaultMediaTime || null,
+          maxMediaTime: guild?.maxMediaTime || null,
+          displayFull: guild?.displayFull || false,
+        };
+      } catch (error: any) {
+        logger.error('[CONTROL] Error getting settings:', error);
+        return reply.status(500).send({ error: 'Failed to get settings', message: error.message });
+      }
+    });
+
+    // Save settings endpoint
+    fastify.post('/settings', async function (req, reply) {
+      const { guildId, defaultMediaTime, maxMediaTime, displayFull } = req.body as SettingsBody;
+
+      if (!guildId) {
+        return reply.status(400).send({ error: 'guildId is required' });
+      }
+
+      try {
+        await prisma.guild.upsert({
+          where: {
+            id: guildId,
+          },
+          create: {
+            id: guildId,
+            defaultMediaTime: defaultMediaTime || null,
+            maxMediaTime: maxMediaTime || null,
+            displayFull: displayFull || false,
+          },
+          update: {
+            defaultMediaTime: defaultMediaTime || null,
+            maxMediaTime: maxMediaTime || null,
+            displayFull: displayFull || false,
+          },
+        });
+
+        logger.info(`[CONTROL] Settings updated (guild: ${guildId})`);
+
+        return { success: true, message: 'Settings saved' };
+      } catch (error: any) {
+        logger.error('[CONTROL] Error saving settings:', error);
+        return reply.status(500).send({ error: 'Failed to save settings', message: error.message });
       }
     });
   };
