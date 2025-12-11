@@ -4,6 +4,7 @@ The Media Control Panel is a web-based interface that allows you to send media f
 
 ## Features
 
+### Media Management
 - **Folder Browsing**: Load and display media files from a custom folder on your system
 - **File Upload**: Upload media files directly from your browser
 - **File Rename**: Easily rename files directly from the control panel for better organization
@@ -11,8 +12,16 @@ The Media Control Panel is a web-based interface that allows you to send media f
 - **Sort Options**: Sort files by name (A-Z/Z-A), type, or date (newest/oldest)
 - **View Size Controls**: Choose between small, medium, or large icon sizes like Windows File Explorer
 - **Instant Display**: Click on any media file to instantly send it to your stream
+
+### Stream Controls
+- **Text-to-Speech**: Type text to be spoken on stream (normal or hidden mode)
+- **Stop Media**: Instantly stop currently playing media with one click
+- **Stream Settings**: Configure default duration, max duration, and fullscreen mode
+
+### General
 - **Real-time Status**: See connection status and receive notifications
 - **Grid View**: Visual grid layout for easy media file browsing
+- **No Discord Required**: All Discord bot commands available in the web interface
 
 ## How to Use
 
@@ -81,7 +90,29 @@ You have two options:
 
 **Note**: The rename feature works for both folder files and uploaded files. It validates that no duplicate names exist and sanitizes the filename for security.
 
-### 6. Send Media to Stream
+### 6. Use Stream Controls
+
+#### Text-to-Speech
+1. Type your message in the text area
+2. Click "🔊 Speak" to send with your username shown
+3. Or click "🔊 Speak (Hidden)" to send anonymously
+4. The text will be converted to speech and played on stream
+
+#### Stop Current Media
+1. Click "⏹️ Stop Current Media" button
+2. Any currently playing media will stop immediately
+3. The stream queue will be cleared
+
+#### Configure Stream Settings
+1. Click "⚙️ Stream Settings" button
+2. Set your preferred options:
+   - **Default Media Duration**: How long media plays (leave empty for auto-detect)
+   - **Maximum Media Duration**: Cap for media length (leave empty for no limit)
+   - **Display Fullscreen**: Toggle fullscreen display mode
+3. Click "Save Settings" to apply changes
+4. Settings are saved per Discord Guild and persist across sessions
+
+### 7. Send Media to Stream
 
 1. Click "Send to Stream" button or the media thumbnail
 2. The file will be automatically sent to your stream

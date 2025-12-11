@@ -68,7 +68,34 @@ The server should start on port 3000 by default.
 - [ ] Check that media appears in OBS overlay
 - [ ] Test with both images and videos
 
-### 6. Test Search & Filter Feature
+### 6. Test Stream Controls
+
+#### Text-to-Speech
+- [ ] Type text in the TTS text area
+- [ ] Click "Speak" button
+- [ ] Verify audio is generated and sent to stream
+- [ ] Verify audio plays on OBS overlay
+- [ ] Click "Speak (Hidden)" button with different text
+- [ ] Verify audio plays without showing username
+
+#### Stop Media
+- [ ] Play media on stream
+- [ ] Click "Stop Current Media" button
+- [ ] Verify media stops immediately
+- [ ] Verify success notification appears
+
+#### Stream Settings
+- [ ] Click "Stream Settings" button
+- [ ] Verify settings modal opens
+- [ ] Set default media time (e.g., 10 seconds)
+- [ ] Set max media time (e.g., 30 seconds)
+- [ ] Toggle fullscreen display
+- [ ] Click "Save Settings"
+- [ ] Verify success notification
+- [ ] Reload page and open settings again
+- [ ] Verify settings persist
+
+### 8. Test Search & Filter Feature
 
 - [ ] Type in the search bar
 - [ ] Verify files are filtered in real-time
@@ -132,7 +159,7 @@ The server should start on port 3000 by default.
 - [ ] Try to rename with empty name
 - [ ] Verify appropriate error handling
 
-### 10. Test Different File Formats
+### 12. Test Different File Formats
 
 #### Images
 - [ ] Test JPG file
@@ -146,7 +173,7 @@ The server should start on port 3000 by default.
 - [ ] Test MOV file (if available)
 - [ ] Test AVI file (if available)
 
-### 11. Test Error Handling
+### 13. Test Error Handling
 
 #### Invalid Folder Path
 - [ ] Enter a non-existent folder path
@@ -163,7 +190,7 @@ The server should start on port 3000 by default.
 - [ ] Try uploading a file over 100MB
 - [ ] Verify error message about file size
 
-### 12. Test Security
+### 14. Test Security
 
 #### Path Traversal
 - [ ] Try entering `../../../etc` as folder path
@@ -174,14 +201,14 @@ The server should start on port 3000 by default.
 - [ ] Verify it's sanitized correctly
 - [ ] Verify the file can be sent to stream
 
-### 13. Test Concurrent Usage
+### 15. Test Concurrent Usage
 - [ ] Open multiple browser tabs with control panel
 - [ ] Send media from different tabs
 - [ ] Verify queue handles multiple requests correctly
 - [ ] Rename a file in one tab
 - [ ] Verify the change reflects when reloading in another tab
 
-### 14. Test Integration with Discord Commands
+### 16. Test Integration with Discord Commands
 - [ ] Send media via Discord `/send` command
 - [ ] Send media via control panel
 - [ ] Verify both work correctly
