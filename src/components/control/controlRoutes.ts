@@ -341,7 +341,8 @@ export const ControlRoutes = () =>
         }
         const buffer = Buffer.concat(chunks);
 
-        // Upload to a temporary location (in production, use proper file hosting)
+        // Save TTS audio to uploads directory
+        // NOTE: In production, consider using dedicated file hosting (S3, CDN, etc.)
         const timestamp = Date.now();
         const ttsFilename = `tts-${timestamp}.mp3`;
         const uploadsDir = join(process.cwd(), 'uploads');
@@ -359,6 +360,9 @@ export const ControlRoutes = () =>
         // Delete the temporary gtts file
         await deleteGtts(filePath);
 
+        // Default TTS duration if detection fails
+        const DEFAULT_TTS_DURATION = 5;
+
         // Create queue entry
         await prisma.queue.create({
           data: {
@@ -366,7 +370,7 @@ export const ControlRoutes = () =>
               text: hidden ? '' : text,
               media: mediaUrl,
               mediaContentType: 'audio/mpeg',
-              mediaDuration: Math.ceil(additionalContent?.mediaDuration || 5),
+              mediaDuration: Math.ceil(additionalContent?.mediaDuration || DEFAULT_TTS_DURATION),
             }),
             type: QueueType.VOCAL,
             discordGuildId: guildId,
@@ -460,14 +464,14 @@ export const ControlRoutes = () =>
           },
           create: {
             id: guildId,
-            defaultMediaTime: defaultMediaTime || null,
-            maxMediaTime: maxMediaTime || null,
-            displayFull: displayFull || false,
+            defaultMediaTime: defaultMediaTime ?? null,
+            maxMediaTime: maxMediaTime ?? null,
+            displayFull: displayFull ?? false,
           },
           update: {
-            defaultMediaTime: defaultMediaTime || null,
-            maxMediaTime: maxMediaTime || null,
-            displayFull: displayFull || false,
+            defaultMediaTime: defaultMediaTime ?? null,
+            maxMediaTime: maxMediaTime ?? null,
+            displayFull: displayFull ?? false,
           },
         });
 
