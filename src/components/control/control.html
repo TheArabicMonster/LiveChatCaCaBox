@@ -17,10 +17,21 @@
     }
     .media-thumbnail {
       width: 100%;
-      height: 200px;
       object-fit: cover;
       background: #f3f4f6;
     }
+    
+    /* View size styles */
+    .view-small .media-thumbnail { height: 100px; }
+    .view-small .media-card h3 { font-size: 0.875rem; }
+    .view-small .media-card button { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    .view-small .media-card svg { width: 1rem; height: 1rem; }
+    
+    .view-medium .media-thumbnail { height: 200px; }
+    
+    .view-large .media-thumbnail { height: 300px; }
+    .view-large .media-card h3 { font-size: 1.125rem; }
+    
     .modal {
       display: none;
       position: fixed;
@@ -113,6 +124,79 @@
       >
     </div>
 
+    <!-- Media Controls -->
+    <div class="mb-6 bg-white rounded-lg shadow p-6">
+      <div class="flex flex-col md:flex-row gap-4 items-center">
+        <!-- Search Bar -->
+        <div class="flex-1 w-full">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search files..."
+          >
+        </div>
+        
+        <!-- Sort By -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Sort by:</label>
+          <select 
+            id="sort-select" 
+            class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="type-asc">Type</option>
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+          </select>
+        </div>
+        
+        <!-- View Size Controls -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 whitespace-nowrap">View:</label>
+          <div class="flex gap-1 border border-gray-300 rounded-lg p-1">
+            <button 
+              id="view-small" 
+              class="view-btn px-3 py-1 rounded hover:bg-gray-200 transition"
+              title="Small icons"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+            </button>
+            <button 
+              id="view-medium" 
+              class="view-btn px-3 py-1 rounded bg-blue-100 hover:bg-gray-200 transition"
+              title="Medium icons"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="8" height="8" rx="1"></rect>
+                <rect x="13" y="3" width="8" height="8" rx="1"></rect>
+                <rect x="3" y="13" width="8" height="8" rx="1"></rect>
+                <rect x="13" y="13" width="8" height="8" rx="1"></rect>
+              </svg>
+            </button>
+            <button 
+              id="view-large" 
+              class="view-btn px-3 py-1 rounded hover:bg-gray-200 transition"
+              title="Large icons"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="4" y="4" width="7" height="7" rx="1"></rect>
+                <rect x="13" y="4" width="7" height="7" rx="1"></rect>
+                <rect x="4" y="13" width="7" height="7" rx="1"></rect>
+                <rect x="13" y="13" width="7" height="7" rx="1"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Media Grid -->
     <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <div class="col-span-full text-center py-12 text-gray-500">
@@ -160,6 +244,10 @@
     let uploadedFiles = new Map();
     let currentFolderPath = null;
     let currentRenameFile = null;
+    let allMediaFiles = [];
+    let currentViewSize = 'medium';
+    let currentSort = 'name-asc';
+    let currentSearchTerm = '';
 
     // Initialize Socket.IO connection
     function initializeSocket() {
@@ -300,20 +388,67 @@
       return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
     }
 
+    // Filter and sort media files
+    function filterAndSortFiles(files) {
+      let filtered = files;
+      
+      // Apply search filter
+      if (currentSearchTerm) {
+        filtered = filtered.filter(file => 
+          file.name.toLowerCase().includes(currentSearchTerm.toLowerCase())
+        );
+      }
+      
+      // Apply sorting
+      filtered = [...filtered].sort((a, b) => {
+        switch (currentSort) {
+          case 'name-asc':
+            return a.name.localeCompare(b.name);
+          case 'name-desc':
+            return b.name.localeCompare(a.name);
+          case 'type-asc':
+            return a.type.localeCompare(b.type) || a.name.localeCompare(b.name);
+          case 'date-desc':
+            return (b.date || 0) - (a.date || 0);
+          case 'date-asc':
+            return (a.date || 0) - (b.date || 0);
+          default:
+            return 0;
+        }
+      });
+      
+      return filtered;
+    }
+
     // Display media files in grid
-    function displayMediaFiles(files) {
+    function displayMediaFiles(files, storeFiles = true) {
+      if (storeFiles) {
+        allMediaFiles = files || [];
+      }
+      
+      const filteredFiles = filterAndSortFiles(allMediaFiles);
       const grid = document.getElementById('media-grid');
       
-      if (!files || files.length === 0) {
+      // Update grid class based on view size
+      if (currentViewSize === 'small') {
+        grid.className = 'view-small grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4';
+      } else if (currentViewSize === 'medium') {
+        grid.className = 'view-medium grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
+      } else {
+        grid.className = 'view-large grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8';
+      }
+      
+      if (!filteredFiles || filteredFiles.length === 0) {
         grid.innerHTML = `
           <div class="col-span-full text-center py-12 text-gray-500">
-            <p class="text-lg">No media files found</p>
+            <p class="text-lg">${allMediaFiles.length === 0 ? 'No media files loaded yet' : 'No files match your search'}</p>
+            ${allMediaFiles.length === 0 ? '<p class="text-sm mt-2">Enter a folder path or upload files to get started</p>' : ''}
           </div>
         `;
         return;
       }
 
-      grid.innerHTML = files.map((file) => {
+      grid.innerHTML = filteredFiles.map((file) => {
         const escapedPath = escapeHtml(file.path);
         const escapedName = escapeHtml(file.name);
         const escapedType = escapeHtml(file.type);
@@ -494,6 +629,39 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', () => {
       initializeSocket();
+      
+      // Search functionality
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value;
+        displayMediaFiles(null, false);
+      });
+      
+      // Sort functionality
+      document.getElementById('sort-select').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        displayMediaFiles(null, false);
+      });
+      
+      // View size controls
+      const viewButtons = {
+        'view-small': 'small',
+        'view-medium': 'medium',
+        'view-large': 'large'
+      };
+      
+      Object.keys(viewButtons).forEach(btnId => {
+        document.getElementById(btnId).addEventListener('click', () => {
+          currentViewSize = viewButtons[btnId];
+          
+          // Update button states
+          document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-100');
+          });
+          document.getElementById(btnId).classList.add('bg-blue-100');
+          
+          displayMediaFiles(null, false);
+        });
+      });
       
       // Rename modal event listeners
       document.getElementById('cancel-rename').addEventListener('click', closeRenameModal);

@@ -91,12 +91,22 @@ export const ControlRoutes = () =>
             const filePath = join(folderPath, file);
             const ext = file.toLowerCase().substring(file.lastIndexOf('.'));
             const isVideo = ['.mp4', '.webm', '.mov', '.avi'].includes(ext);
+            
+            // Get file stats for modification date
+            let modificationDate = 0;
+            try {
+              const stats = fs.statSync(filePath);
+              modificationDate = stats.mtimeMs;
+            } catch (e) {
+              // Ignore stat errors
+            }
 
             return {
               name: file,
               path: filePath,
               type: isVideo ? 'video' : 'image',
               isUploaded: false,
+              date: modificationDate,
             };
           });
 
