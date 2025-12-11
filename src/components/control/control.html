@@ -17,6 +17,7 @@
     }
     .media-thumbnail {
       width: 100%;
+      height: 200px;
       object-fit: cover;
       background: #f3f4f6;
     }
@@ -420,6 +421,13 @@
       return filtered;
     }
 
+    // View size configuration
+    const viewSizeConfig = {
+      small: 'view-small grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4',
+      medium: 'view-medium grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6',
+      large: 'view-large grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8'
+    };
+
     // Display media files in grid
     function displayMediaFiles(files, storeFiles = true) {
       if (storeFiles) {
@@ -430,13 +438,7 @@
       const grid = document.getElementById('media-grid');
       
       // Update grid class based on view size
-      if (currentViewSize === 'small') {
-        grid.className = 'view-small grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4';
-      } else if (currentViewSize === 'medium') {
-        grid.className = 'view-medium grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
-      } else {
-        grid.className = 'view-large grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8';
-      }
+      grid.className = viewSizeConfig[currentViewSize] || viewSizeConfig.medium;
       
       if (!filteredFiles || filteredFiles.length === 0) {
         grid.innerHTML = `
