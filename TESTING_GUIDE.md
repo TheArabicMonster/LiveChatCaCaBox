@@ -68,7 +68,45 @@ The server should start on port 3000 by default.
 - [ ] Check that media appears in OBS overlay
 - [ ] Test with both images and videos
 
-### 6. Test File Rename Feature
+### 6. Test Search & Filter Feature
+
+- [ ] Type in the search bar
+- [ ] Verify files are filtered in real-time
+- [ ] Test case-insensitive search (e.g., "TEST" finds "test.jpg")
+- [ ] Search for partial filename matches
+- [ ] Verify "No files match your search" message when no results
+- [ ] Clear search and verify all files return
+
+### 7. Test Sort Feature
+
+- [ ] Select "Name (A-Z)" and verify alphabetical order
+- [ ] Select "Name (Z-A)" and verify reverse order
+- [ ] Select "Type" and verify images/videos are grouped
+- [ ] Select "Newest First" and verify most recent files first
+- [ ] Select "Oldest First" and verify oldest files first
+- [ ] Verify sorting persists when searching
+
+### 8. Test View Size Controls
+
+#### Small View
+- [ ] Click small icon button
+- [ ] Verify grid shows 6 columns
+- [ ] Verify thumbnails are smaller (100px height)
+- [ ] Verify text and buttons are compact
+
+#### Medium View (Default)
+- [ ] Click medium icon button
+- [ ] Verify grid shows 4 columns
+- [ ] Verify thumbnails are medium (200px height)
+- [ ] Verify this is the default view on load
+
+#### Large View
+- [ ] Click large icon button
+- [ ] Verify grid shows 3 columns
+- [ ] Verify thumbnails are larger (300px height)
+- [ ] Verify smooth transition between sizes
+
+### 9. Test File Rename Feature
 
 #### Basic Rename
 - [ ] Click the pencil icon on a media card
@@ -94,7 +132,7 @@ The server should start on port 3000 by default.
 - [ ] Try to rename with empty name
 - [ ] Verify appropriate error handling
 
-### 7. Test Different File Formats
+### 10. Test Different File Formats
 
 #### Images
 - [ ] Test JPG file
@@ -108,7 +146,7 @@ The server should start on port 3000 by default.
 - [ ] Test MOV file (if available)
 - [ ] Test AVI file (if available)
 
-### 8. Test Error Handling
+### 11. Test Error Handling
 
 #### Invalid Folder Path
 - [ ] Enter a non-existent folder path
@@ -125,7 +163,7 @@ The server should start on port 3000 by default.
 - [ ] Try uploading a file over 100MB
 - [ ] Verify error message about file size
 
-### 9. Test Security
+### 12. Test Security
 
 #### Path Traversal
 - [ ] Try entering `../../../etc` as folder path
@@ -136,14 +174,14 @@ The server should start on port 3000 by default.
 - [ ] Verify it's sanitized correctly
 - [ ] Verify the file can be sent to stream
 
-### 10. Test Concurrent Usage
+### 13. Test Concurrent Usage
 - [ ] Open multiple browser tabs with control panel
 - [ ] Send media from different tabs
 - [ ] Verify queue handles multiple requests correctly
 - [ ] Rename a file in one tab
 - [ ] Verify the change reflects when reloading in another tab
 
-### 11. Test Integration with Discord Commands
+### 14. Test Integration with Discord Commands
 - [ ] Send media via Discord `/send` command
 - [ ] Send media via control panel
 - [ ] Verify both work correctly

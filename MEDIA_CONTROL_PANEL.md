@@ -7,6 +7,9 @@ The Media Control Panel is a web-based interface that allows you to send media f
 - **Folder Browsing**: Load and display media files from a custom folder on your system
 - **File Upload**: Upload media files directly from your browser
 - **File Rename**: Easily rename files directly from the control panel for better organization
+- **Search & Filter**: Real-time search bar to quickly find files
+- **Sort Options**: Sort files by name (A-Z/Z-A), type, or date (newest/oldest)
+- **View Size Controls**: Choose between small, medium, or large icon sizes like Windows File Explorer
 - **Instant Display**: Click on any media file to instantly send it to your stream
 - **Real-time Status**: See connection status and receive notifications
 - **Grid View**: Visual grid layout for easy media file browsing
@@ -46,7 +49,28 @@ You have two options:
 2. Select one or more media files from your computer
 3. The files will be uploaded and displayed in the grid
 
-### 4. Rename Files (Optional)
+### 4. Organize Your Media
+
+#### Search for Files
+1. Type in the search bar at the top
+2. Files are filtered in real-time as you type
+3. Search is case-insensitive
+
+#### Sort Files
+1. Use the "Sort by" dropdown to organize your media:
+   - **Name (A-Z)**: Alphabetical order
+   - **Name (Z-A)**: Reverse alphabetical order
+   - **Type**: Group images and videos together
+   - **Newest First**: Most recently modified files first
+   - **Oldest First**: Oldest files first
+
+#### Adjust View Size
+1. Click the view size buttons (small/medium/large icons)
+2. **Small**: Compact grid with 6 columns - see more files at once
+3. **Medium**: Default view with 4 columns - balanced layout
+4. **Large**: Detailed view with 3 columns - larger thumbnails
+
+### 5. Rename Files (Optional)
 
 1. Click the pencil icon (✏️) on any media card
 2. A modal will appear showing the current filename
@@ -57,7 +81,7 @@ You have two options:
 
 **Note**: The rename feature works for both folder files and uploaded files. It validates that no duplicate names exist and sanitizes the filename for security.
 
-### 5. Send Media to Stream
+### 6. Send Media to Stream
 
 1. Click "Send to Stream" button or the media thumbnail
 2. The file will be automatically sent to your stream
