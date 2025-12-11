@@ -40,6 +40,13 @@ interface SettingsBody {
   displayFull?: boolean;
 }
 
+interface SendMediaWithParamsBody {
+  guildId: string;
+  mediaUrl: string;
+  text?: string;
+  hidden: boolean;
+}
+
 // Sanitize filename to prevent directory traversal
 function sanitizeFilename(filename: string): string {
   // Remove any path separators and keep only the filename
@@ -250,6 +257,66 @@ export const ControlRoutes = () =>
         return { success: true, message: 'Media sent to stream' };
       } catch (error: any) {
         logger.error('[CONTROL] Error sending media:', error);
+        return reply.status(500).send({ error: 'Failed to send media', message: error.message });
+      }
+    });
+
+    // Send media with parameters (like /send and /hsend commands)
+    fastify.post('/send-media-with-params', async function (req, reply) {
+      const { guildId, mediaUrl, text, hidden } = req.body as SendMediaWithParamsBody;
+
+      if (!guildId || !mediaUrl) {
+        return reply.status(400).send({ error: 'guildId and mediaUrl are required' });
+      }
+
+      try {
+        // Get content information
+        const additionalContent = await getContentInformationsFromUrl(mediaUrl);
+
+        let mediaContentType = 'application/octet-stream';
+        let mediaDuration: number | undefined;
+        let mediaIsShort = false;
+
+        if (additionalContent?.contentType) {
+          mediaContentType = additionalContent.contentType;
+        }
+
+        if (additionalContent?.mediaDuration) {
+          mediaDuration = additionalContent.mediaDuration;
+        }
+
+        if (additionalContent?.mediaIsShort) {
+          mediaIsShort = additionalContent.mediaIsShort || false;
+        }
+
+        // Create queue entry with optional text and hidden mode
+        await prisma.queue.create({
+          data: {
+            content: JSON.stringify({
+              url: mediaUrl,
+              text: text || undefined,
+              media: mediaUrl,
+              mediaContentType,
+              mediaDuration: await getDurationFromGuildId(
+                mediaDuration ? Math.ceil(mediaDuration) : undefined,
+                guildId,
+              ),
+              displayFull: await getDisplayMediaFullFromGuildId(guildId),
+              mediaIsShort,
+            }),
+            type: QueueType.MESSAGE,
+            author: hidden ? undefined : 'Media Control Panel',
+            authorImage: hidden ? undefined : null,
+            discordGuildId: guildId,
+            duration: await getDurationFromGuildId(mediaDuration ? Math.ceil(mediaDuration) : undefined, guildId),
+          },
+        });
+
+        logger.info(`[CONTROL] Media with params sent to stream (guild: ${guildId}, hidden: ${hidden})`);
+
+        return { success: true, message: 'Media sent to stream' };
+      } catch (error: any) {
+        logger.error('[CONTROL] Error sending media with params:', error);
         return reply.status(500).send({ error: 'Failed to send media', message: error.message });
       }
     });
