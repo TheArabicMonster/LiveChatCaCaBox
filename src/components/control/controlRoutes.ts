@@ -225,4 +225,71 @@ export const ControlRoutes = () =>
         return reply.status(500).send({ error: 'Failed to send media', message: error.message });
       }
     });
+
+    // Rename file
+    fastify.post('/rename-file', async function (req, reply) {
+      const { oldPath, newName, folderPath, isUploaded } = req.body as any;
+
+      if (!oldPath || !newName) {
+        return reply.status(400).send({ error: 'oldPath and newName are required' });
+      }
+
+      try {
+        // Sanitize the new filename
+        const sanitizedNewName = sanitizeFilename(newName);
+
+        if (isUploaded) {
+          // Handle uploaded files
+          const uploadsDir = join(process.cwd(), 'uploads');
+          const oldFilename = oldPath.split('/').pop() || oldPath;
+          const oldFilePath = join(uploadsDir, sanitizedFilename(oldFilename));
+          const newFilePath = join(uploadsDir, sanitizedNewName);
+
+          if (!fs.existsSync(oldFilePath)) {
+            return reply.status(404).send({ error: 'File not found' });
+          }
+
+          // Check if new filename already exists
+          if (fs.existsSync(newFilePath) && oldFilePath !== newFilePath) {
+            return reply.status(400).send({ error: 'A file with this name already exists' });
+          }
+
+          // Rename the file
+          fs.renameSync(oldFilePath, newFilePath);
+          logger.info(`[CONTROL] File renamed: ${oldFilename} -> ${sanitizedNewName}`);
+        } else {
+          // Handle folder files
+          if (!folderPath) {
+            return reply.status(400).send({ error: 'folderPath is required for folder files' });
+          }
+
+          // Validate folder path
+          if (!isPathSafe(folderPath)) {
+            return reply.status(400).send({ error: 'Invalid folder path' });
+          }
+
+          const oldFilename = oldPath.split('/').pop() || oldPath.split('\\').pop() || oldPath;
+          const oldFilePath = join(folderPath, oldFilename);
+          const newFilePath = join(folderPath, sanitizedNewName);
+
+          if (!fs.existsSync(oldFilePath)) {
+            return reply.status(404).send({ error: 'File not found' });
+          }
+
+          // Check if new filename already exists
+          if (fs.existsSync(newFilePath) && oldFilePath !== newFilePath) {
+            return reply.status(400).send({ error: 'A file with this name already exists' });
+          }
+
+          // Rename the file
+          fs.renameSync(oldFilePath, newFilePath);
+          logger.info(`[CONTROL] File renamed: ${oldFilename} -> ${sanitizedNewName} in ${folderPath}`);
+        }
+
+        return { success: true, newName: sanitizedNewName };
+      } catch (error: any) {
+        logger.error('[CONTROL] Error renaming file:', error);
+        return reply.status(500).send({ error: 'Failed to rename file', message: error.message });
+      }
+    });
   };
