@@ -2,6 +2,7 @@
 import 'reflect-metadata';
 import Fastify from 'fastify';
 import FastifyCORS from '@fastify/cors';
+import FastifyMultipart from '@fastify/multipart';
 import GracefulServer from '@gquittet/graceful-server';
 import unifyFastifyPlugin from 'unify-fastify';
 import { loadRoutes } from './loaders/RESTLoader';
@@ -91,6 +92,13 @@ export const runServer = async () => {
     ],
     origin: true,
     credentials: true,
+  });
+
+  // Register multipart support for file uploads
+  await fastify.register(FastifyMultipart, {
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB
+    },
   });
 
   loadRosetty();
