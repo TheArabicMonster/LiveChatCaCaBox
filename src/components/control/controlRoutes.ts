@@ -242,7 +242,7 @@ export const ControlRoutes = () =>
           // Handle uploaded files
           const uploadsDir = join(process.cwd(), 'uploads');
           const oldFilename = oldPath.split('/').pop() || oldPath;
-          const oldFilePath = join(uploadsDir, sanitizedFilename(oldFilename));
+          const oldFilePath = join(uploadsDir, sanitizeFilename(oldFilename));
           const newFilePath = join(uploadsDir, sanitizedNewName);
 
           if (!fs.existsSync(oldFilePath)) {

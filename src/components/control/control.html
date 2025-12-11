@@ -477,7 +477,8 @@
           const fileData = uploadedFiles.get(currentRenameFile.name);
           if (fileData) {
             uploadedFiles.delete(currentRenameFile.name);
-            uploadedFiles.set(newName, fileData);
+            // Use the sanitized name from the server
+            uploadedFiles.set(result.newName, fileData);
             displayUploadedFiles();
           }
         } else if (currentFolderPath) {
@@ -502,10 +503,12 @@
           closeRenameModal();
         }
       });
-      document.getElementById('new-filename').addEventListener('keypress', (e) => {
+      document.getElementById('new-filename').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
+          e.preventDefault();
           renameFile();
         } else if (e.key === 'Escape') {
+          e.preventDefault();
           closeRenameModal();
         }
       });
