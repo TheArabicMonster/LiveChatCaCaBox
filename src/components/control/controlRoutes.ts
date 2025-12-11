@@ -286,21 +286,24 @@ export const ControlRoutes = () =>
         }
 
         if (additionalContent?.mediaIsShort) {
-          mediaIsShort = additionalContent.mediaIsShort || false;
+          mediaIsShort = additionalContent.mediaIsShort;
         }
+
+        // Calculate duration once to avoid duplicate async calls
+        const calculatedDuration = await getDurationFromGuildId(
+          mediaDuration ? Math.ceil(mediaDuration) : undefined,
+          guildId,
+        );
 
         // Create queue entry with optional text and hidden mode
         await prisma.queue.create({
           data: {
             content: JSON.stringify({
               url: mediaUrl,
-              text: text || undefined,
+              text: text,
               media: mediaUrl,
               mediaContentType,
-              mediaDuration: await getDurationFromGuildId(
-                mediaDuration ? Math.ceil(mediaDuration) : undefined,
-                guildId,
-              ),
+              mediaDuration: calculatedDuration,
               displayFull: await getDisplayMediaFullFromGuildId(guildId),
               mediaIsShort,
             }),
@@ -308,7 +311,7 @@ export const ControlRoutes = () =>
             author: hidden ? undefined : 'Media Control Panel',
             authorImage: hidden ? undefined : null,
             discordGuildId: guildId,
-            duration: await getDurationFromGuildId(mediaDuration ? Math.ceil(mediaDuration) : undefined, guildId),
+            duration: calculatedDuration,
           },
         });
 
