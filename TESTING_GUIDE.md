@@ -68,7 +68,37 @@ The server should start on port 3000 by default.
 - [ ] Check that media appears in OBS overlay
 - [ ] Test with both images and videos
 
-### 6. Test Stream Controls
+### 6. Test Send Media with Parameters
+
+#### Send from URL
+- [ ] Enter a media URL (e.g., image or video link)
+- [ ] Add optional text in text overlay field
+- [ ] Click "Send to Stream" button
+- [ ] Verify media appears on OBS with text overlay
+- [ ] Verify username is shown
+
+#### Send from URL (Hidden)
+- [ ] Enter a different media URL
+- [ ] Add optional text
+- [ ] Click "Send (Hidden)" button
+- [ ] Verify media appears on OBS
+- [ ] Verify username is NOT shown
+
+#### Upload File with Parameters
+- [ ] Clear URL field
+- [ ] Upload a media file
+- [ ] Add text overlay
+- [ ] Click "Send to Stream"
+- [ ] Verify file is uploaded and sent
+- [ ] Verify text overlay appears
+
+#### Edge Cases
+- [ ] Try to send without URL or file - verify error message
+- [ ] Send with only URL (no text) - verify works
+- [ ] Send with only text overlay - verify error
+- [ ] Send large file - verify upload progress
+
+### 7. Test Stream Controls
 
 #### Text-to-Speech
 - [ ] Type text in the TTS text area
@@ -95,7 +125,7 @@ The server should start on port 3000 by default.
 - [ ] Reload page and open settings again
 - [ ] Verify settings persist
 
-### 8. Test Search & Filter Feature
+### 9. Test Search & Filter Feature
 
 - [ ] Type in the search bar
 - [ ] Verify files are filtered in real-time
@@ -159,7 +189,7 @@ The server should start on port 3000 by default.
 - [ ] Try to rename with empty name
 - [ ] Verify appropriate error handling
 
-### 12. Test Different File Formats
+### 13. Test Different File Formats
 
 #### Images
 - [ ] Test JPG file
@@ -173,7 +203,7 @@ The server should start on port 3000 by default.
 - [ ] Test MOV file (if available)
 - [ ] Test AVI file (if available)
 
-### 13. Test Error Handling
+### 14. Test Error Handling
 
 #### Invalid Folder Path
 - [ ] Enter a non-existent folder path
@@ -190,7 +220,7 @@ The server should start on port 3000 by default.
 - [ ] Try uploading a file over 100MB
 - [ ] Verify error message about file size
 
-### 14. Test Security
+### 15. Test Security
 
 #### Path Traversal
 - [ ] Try entering `../../../etc` as folder path
@@ -201,14 +231,14 @@ The server should start on port 3000 by default.
 - [ ] Verify it's sanitized correctly
 - [ ] Verify the file can be sent to stream
 
-### 15. Test Concurrent Usage
+### 16. Test Concurrent Usage
 - [ ] Open multiple browser tabs with control panel
 - [ ] Send media from different tabs
 - [ ] Verify queue handles multiple requests correctly
 - [ ] Rename a file in one tab
 - [ ] Verify the change reflects when reloading in another tab
 
-### 16. Test Integration with Discord Commands
+### 17. Test Integration with Discord Commands
 - [ ] Send media via Discord `/send` command
 - [ ] Send media via control panel
 - [ ] Verify both work correctly

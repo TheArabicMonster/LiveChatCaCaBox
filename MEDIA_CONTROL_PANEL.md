@@ -13,6 +13,12 @@ The Media Control Panel is a web-based interface that allows you to send media f
 - **View Size Controls**: Choose between small, medium, or large icon sizes like Windows File Explorer
 - **Instant Display**: Click on any media file to instantly send it to your stream
 
+### Send Media with Parameters
+- **Media from URL**: Send media directly from any URL (like `/send url:...`)
+- **Text Overlay**: Add optional text to display with media (like `/send text:...`)
+- **File Upload**: Upload media files with parameters (like `/send [attachment]`)
+- **Hidden Mode**: Send anonymously without showing username (like `/hsend`)
+
 ### Stream Controls
 - **Text-to-Speech**: Type text to be spoken on stream (normal or hidden mode)
 - **Stop Media**: Instantly stop currently playing media with one click
@@ -21,7 +27,7 @@ The Media Control Panel is a web-based interface that allows you to send media f
 ### General
 - **Real-time Status**: See connection status and receive notifications
 - **Grid View**: Visual grid layout for easy media file browsing
-- **No Discord Required**: All Discord bot commands available in the web interface
+- **Complete Discord Bot Parity**: ALL Discord bot commands and parameters available in the web interface
 
 ## How to Use
 
@@ -90,7 +96,24 @@ You have two options:
 
 **Note**: The rename feature works for both folder files and uploaded files. It validates that no duplicate names exist and sanitizes the filename for security.
 
-### 6. Use Stream Controls
+### 6. Send Media with Parameters (Advanced)
+
+Use this feature to send media with all Discord bot command parameters:
+
+1. **Enter Media URL** (optional): Paste a direct link to an image or video
+2. **Add Text Overlay** (optional): Type text to display with the media
+3. **Or Upload File**: Choose a file from your computer instead of URL
+4. Click **"📤 Send to Stream"** to send with your username shown
+5. Or click **"📤 Send (Hidden)"** to send anonymously
+
+**Examples:**
+- Send meme from URL with text: Enter URL + add "Check this out!" + Send
+- Upload video with context: Upload file + add description + Send
+- Anonymous send: Enter URL or upload + Send (Hidden)
+
+This replaces Discord's `/send` and `/hsend` commands with full parameter support!
+
+### 7. Use Stream Controls
 
 #### Text-to-Speech
 1. Type your message in the text area
@@ -112,7 +135,7 @@ You have two options:
 3. Click "Save Settings" to apply changes
 4. Settings are saved per Discord Guild and persist across sessions
 
-### 7. Send Media to Stream
+### 8. Quick Send from Grid
 
 1. Click "Send to Stream" button or the media thumbnail
 2. The file will be automatically sent to your stream
