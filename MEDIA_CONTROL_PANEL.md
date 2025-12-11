@@ -4,6 +4,12 @@ The Media Control Panel is a web-based interface that allows you to send media f
 
 ## Features
 
+### User-Friendly Interface
+- **Quick Action Bar**: 4 main buttons for instant access to key features (Load Media, Send URL, TTS, Settings)
+- **Collapsible Sections**: Organized layout reduces clutter, shows only what you need
+- **Always-Visible Stop Button**: Emergency control to stop media instantly
+- **Modern Design**: Gradient colors and intuitive layout for better user experience
+
 ### Media Management
 - **Folder Browsing**: Load and display media files from a custom folder on your system
 - **File Upload**: Upload media files directly from your browser
@@ -12,12 +18,14 @@ The Media Control Panel is a web-based interface that allows you to send media f
 - **Sort Options**: Sort files by name (A-Z/Z-A), type, or date (newest/oldest)
 - **View Size Controls**: Choose between small, medium, or large icon sizes like Windows File Explorer
 - **Instant Display**: Click on any media file to instantly send it to your stream
+- **Text Overlay for Folder Media**: Add text to ANY media file from your folder (not just URLs!)
 
 ### Send Media with Parameters
 - **Media from URL**: Send media directly from any URL (like `/send url:...`)
 - **Text Overlay**: Add optional text to display with media (like `/send text:...`)
 - **File Upload**: Upload media files with parameters (like `/send [attachment]`)
 - **Hidden Mode**: Send anonymously without showing username (like `/hsend`)
+- **Folder Media with Text**: Use "Send + Text" button on media cards to add text overlay
 
 ### Stream Controls
 - **Text-to-Speech**: Type text to be spoken on stream (normal or hidden mode)
@@ -96,15 +104,48 @@ You have two options:
 
 **Note**: The rename feature works for both folder files and uploaded files. It validates that no duplicate names exist and sanitizes the filename for security.
 
-### 6. Send Media with Parameters (Advanced)
+### 6. Using the Quick Action Bar
 
-Use this feature to send media with all Discord bot command parameters:
+The quick action bar provides instant access to main features:
 
-1. **Enter Media URL** (optional): Paste a direct link to an image or video
-2. **Add Text Overlay** (optional): Type text to display with the media
-3. **Or Upload File**: Choose a file from your computer instead of URL
-4. Click **"📤 Send to Stream"** to send with your username shown
-5. Or click **"📤 Send (Hidden)"** to send anonymously
+1. **📁 Load Media**: Toggle the media source section (folder browser + file upload)
+2. **🌐 Send URL**: Toggle the URL sender with text overlay parameters
+3. **🔊 TTS**: Toggle the Text-to-Speech section
+4. **⚙️ Settings**: Open stream settings modal
+
+Click any button to show/hide its section. Only one section is visible at a time for a cleaner interface.
+
+### 7. Send Media from Grid (2 Options)
+
+Each media card in your grid has 3 buttons:
+
+#### Option A: Quick Send
+1. Click **"📤 Send"** button or click on the thumbnail
+2. The file will be sent immediately to your stream
+3. No text overlay, quick and simple
+
+#### Option B: Send with Text Overlay
+1. Click **"📝 Send + Text"** button on any media card
+2. A modal dialog appears showing the filename
+3. Type optional text to display with the media
+4. Click **"📤 Send"** to send with username shown
+5. Or click **"📤 Hidden"** to send anonymously
+
+**Examples:**
+- Send vacation photo with caption: Click "Send + Text" → Type "Beach day!" → Send
+- Send meme anonymously: Click "Send + Text" → (leave text empty or add message) → Hidden
+- Quick send: Just click "📤 Send" button - no dialog
+
+### 8. Send Media from URL with Parameters
+
+For sending media from external URLs:
+
+1. Click **"🌐 Send URL"** in the quick action bar
+2. **Enter Media URL** (required): Paste a direct link to an image or video
+3. **Add Text Overlay** (optional): Type text to display with the media
+4. **Or Upload File**: Choose a file from your computer instead of URL
+5. Click **"📤 Send to Stream"** to send with your username shown
+6. Or click **"📤 Send (Hidden)"** to send anonymously
 
 **Examples:**
 - Send meme from URL with text: Enter URL + add "Check this out!" + Send
@@ -113,33 +154,30 @@ Use this feature to send media with all Discord bot command parameters:
 
 This replaces Discord's `/send` and `/hsend` commands with full parameter support!
 
-### 7. Use Stream Controls
+### 9. Text-to-Speech
 
-#### Text-to-Speech
-1. Type your message in the text area
-2. Click "🔊 Speak" to send with your username shown
-3. Or click "🔊 Speak (Hidden)" to send anonymously
-4. The text will be converted to speech and played on stream
+1. Click **"🔊 TTS"** in the quick action bar
+2. Type your message in the text area
+3. Click "🔊 Speak" to send with your username shown
+4. Or click "🔊 Speak (Hidden)" to send anonymously
+5. The text will be converted to speech and played on stream
 
-#### Stop Current Media
-1. Click "⏹️ Stop Current Media" button
-2. Any currently playing media will stop immediately
-3. The stream queue will be cleared
+### 10. Emergency Controls
+
+#### Stop Current Media (Always Visible)
+1. The red **"⏹️ Stop Current Media"** button is always visible at the top
+2. Click it anytime to immediately stop playing media
+3. Clears the stream queue
+4. Use this for emergency control
 
 #### Configure Stream Settings
-1. Click "⚙️ Stream Settings" button
+1. Click **"⚙️ Settings"** in the quick action bar
 2. Set your preferred options:
    - **Default Media Duration**: How long media plays (leave empty for auto-detect)
    - **Maximum Media Duration**: Cap for media length (leave empty for no limit)
    - **Display Fullscreen**: Toggle fullscreen display mode
 3. Click "Save Settings" to apply changes
 4. Settings are saved per Discord Guild and persist across sessions
-
-### 8. Quick Send from Grid
-
-1. Click "Send to Stream" button or the media thumbnail
-2. The file will be automatically sent to your stream
-3. You'll receive a confirmation notification
 4. The media will appear on your OBS overlay
 
 ## Supported File Formats
