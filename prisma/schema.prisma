@@ -62,6 +62,7 @@ model MediaItem {
   folderId     String
   userId       String
   filename     String
+  name         String? // Custom display name
   fileType     String
   fileSize     Int
   duration     Float?

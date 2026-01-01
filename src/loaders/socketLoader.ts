@@ -152,14 +152,22 @@ export const loadSocket = (fastify: FastifyCustomInstance) => {
           });
         }
 
-        // Get list of existing filenames
-        const existingFilenames = new Set(folder.mediaItems.map((item) => item.filename));
+        // Get list of existing filenames (normalize to lowercase)
+        const existingFilenames = new Set(folder.mediaItems.map((item) => item.filename.toLowerCase()));
+
+        logger.info(`[Scan] Found ${existingFilenames.size} existing items in DB for this folder.`);
+        if (existingFilenames.size > 0) {
+          logger.debug(`[Scan] Existing (normalized): ${Array.from(existingFilenames).join(', ')}`);
+        }
 
         // Filter out items that already exist
-        const newMediaItems = mediaItems.filter((item) => !existingFilenames.has(item.filename));
+        const newMediaItems = mediaItems.filter((item) => !existingFilenames.has(item.filename.toLowerCase()));
+
+        logger.info(`[Scan] Found ${mediaItems.length} items on disk.`);
+        logger.info(`[Scan] Identified ${newMediaItems.length} NEW items to add.`);
 
         if (newMediaItems.length === 0) {
-          logger.info(`No new media items found in ${folderPath}`);
+          logger.info(`No new media items found in ${folderPath} (Skipped ${mediaItems.length} existing)`);
           socket.emit('admin:scan-complete', {
             folderId: folder.id,
             mediaCount: 0,
