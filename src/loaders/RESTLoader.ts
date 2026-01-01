@@ -1,5 +1,5 @@
-import { startCase } from 'lodash';
 import path from 'path';
+import { startCase } from 'lodash';
 import { ClientRoutes } from '../components/client/clientRoutes';
 import { AdminRoutes } from '../components/admin/adminRoutes';
 

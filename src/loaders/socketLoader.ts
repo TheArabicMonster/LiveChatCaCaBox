@@ -234,7 +234,14 @@ export const loadSocket = (fastify: FastifyCustomInstance) => {
      */
     socket.on(
       'admin:play-media',
-      async (data: { mediaId: string; requesterId: string; guildId: string; displayFull?: boolean; text?: string; layout?: any }) => {
+      async (data: {
+        mediaId: string;
+        requesterId: string;
+        guildId: string;
+        displayFull?: boolean;
+        text?: string;
+        layout?: any;
+      }) => {
         try {
           const { mediaId, requesterId, guildId, displayFull, text, layout } = data;
 
@@ -299,7 +306,9 @@ export const loadSocket = (fastify: FastifyCustomInstance) => {
             mediaId,
           });
 
-          logger.info(`📺 Media ${mediaId} added to queue for guild: ${anonymizeId(guildId)}, will be sent to room: messages-${anonymizeId(guildId)}`);
+          logger.info(
+            `📺 Media ${mediaId} added to queue for guild: ${anonymizeId(guildId)}, will be sent to room: messages-${anonymizeId(guildId)}`,
+          );
         } catch (error) {
           logger.error('Error playing media:', error);
           socket.emit('admin:error', {

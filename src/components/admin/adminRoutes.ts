@@ -20,13 +20,10 @@ export const AdminRoutes = () =>
       return stream;
     });
 
-
-
     /**
      * POST /api/admin/browse-folder - Open native folder picker
      */
     fastify.post('/api/admin/browse-folder', async function (req, reply) {
-
       try {
         const scriptPath = path.resolve(process.cwd(), 'src/scripts/Select-Folder.ps1');
         // Use -ExecutionPolicy Bypass to allow the script to run, and -Sta for COM dialogs
@@ -171,7 +168,6 @@ export const AdminRoutes = () =>
           success: true,
           data: { deletedCount, errors },
         });
-
       } catch (error) {
         logger.error('Error batch deleting media:', error);
         return reply.status(500).send({
@@ -237,7 +233,8 @@ export const AdminRoutes = () =>
         } else if (mediaItem.fileType === 'video') {
           if (ext === '.mp4') contentType = 'video/mp4';
           else if (ext === '.webm') contentType = 'video/webm';
-          else if (ext === '.mov') contentType = 'video/quicktime'; // Keep quicktime, let browser decide based on URL
+          else if (ext === '.mov')
+            contentType = 'video/quicktime'; // Keep quicktime, let browser decide based on URL
           else if (ext === '.avi') contentType = 'video/x-msvideo';
           else if (ext === '.mkv') contentType = 'video/x-matroska';
         } else if (mediaItem.fileType === 'audio') {

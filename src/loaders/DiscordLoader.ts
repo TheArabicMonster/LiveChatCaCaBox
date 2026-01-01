@@ -22,6 +22,7 @@ import { setDefaultTimeCommand } from '../components/discord/setDefaultTimeComma
 import { setDisplayMediaFullCommand } from '../components/discord/setDisplayFullCommand';
 import { setMaxTimeCommand } from '../components/discord/setMaxTimeCommand';
 import { stopCommand } from '../components/messages/stopCommand';
+import { startTunnel } from '../services/tunnelService';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const loadDiscord = async (fastify: FastifyCustomInstance) => {
@@ -36,13 +37,38 @@ export const loadDiscord = async (fastify: FastifyCustomInstance) => {
   loadDiscordCommandsHandler();
   loadMessagesWorker(fastify);
 
-  client.once(Events.ClientReady, (readyClient) => {
+  client.once(Events.ClientReady, async (readyClient) => {
     logger.info(`[DISCORD] ${rosetty.t('discordBotReady', { username: readyClient.user.tag })}`);
     logger.info(
       `[DISCORD] ${rosetty.t('discordInvite', {
         link: `https://discord.com/oauth2/authorize?client_id=${env.DISCORD_CLIENT_ID}&scope=bot`,
       })}`,
     );
+
+    // Start Tunnel and Notify
+    try {
+      const tunnelUrl = await startTunnel(env.PORT || 3000);
+
+      const channelId = '1183500928763048026';
+      const roleId = '1183450053793300500';
+
+      const channel = await client.channels.fetch(channelId);
+
+      if (channel && channel.isTextBased()) {
+        await channel.send({
+          content: `<@&${roleId}> L'interface web pour le live chat est : ${tunnelUrl}`,
+        });
+        logger.info(`[DISCORD] Tunnel URL sent to channel ${channelId}`);
+      } else {
+        logger.warn(`[DISCORD] Notification channel ${channelId} not found or not text-based`);
+      }
+    } catch (e: any) {
+      if (e.code === 50001) {
+        logger.error(`[DISCORD] Erreur de permission (Missing Access) : Le bot ne peut pas envoyer de messages dans le salon ${channelId}. Vérifiez qu'il a bien la permission "Envoyer des messages" et "Voir le salon".`);
+      } else {
+        logger.error(e, '[DISCORD] Failed to start tunnel or send notification');
+      }
+    }
   });
 
   client.on(Events.GuildCreate, (g) => {
