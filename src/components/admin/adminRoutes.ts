@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { exec } from 'child_process';
 
 // Path validation function from security practices
 const isPathSafe = (filePath: string): boolean => {
@@ -17,6 +18,44 @@ export const AdminRoutes = () =>
       const stream = fs.createReadStream(path.join(__dirname, 'admin.html'));
       reply.type('text/html');
       return stream;
+    });
+
+
+
+    /**
+     * POST /api/admin/browse-folder - Open native folder picker
+     */
+    fastify.post('/api/admin/browse-folder', async function (req, reply) {
+
+      try {
+        const scriptPath = path.resolve(process.cwd(), 'src/scripts/Select-Folder.ps1');
+        // Use -ExecutionPolicy Bypass to allow the script to run, and -Sta for COM dialogs
+        const cmd = `powershell -NoProfile -Sta -ExecutionPolicy Bypass -File "${scriptPath}"`;
+
+        logger.info(`Opening folder picker via script: ${scriptPath}`);
+
+        return new Promise((resolve, reject) => {
+          exec(cmd, (error, stdout, stderr) => {
+            if (error) {
+              logger.error('Error opening folder picker:', error);
+              // Fallback or specific error? Usually implies cancelled or system issue.
+              // If user cancels, selectedPath is empty string.
+              resolve(reply.send({ success: false, error: 'Failed to open picker' }));
+              return;
+            }
+            const selectedPath = stdout.trim();
+            if (!selectedPath) {
+              // User cancelled
+              resolve(reply.send({ success: false, cancelled: true }));
+            } else {
+              resolve(reply.send({ success: true, path: selectedPath }));
+            }
+          });
+        });
+      } catch (error) {
+        logger.error('Error in browse-folder:', error);
+        return reply.status(500).send({ success: false, error: 'Internal Server Error' });
+      }
     });
 
     /**
@@ -87,6 +126,63 @@ export const AdminRoutes = () =>
         return reply.status(500).send({
           success: false,
           error: 'Failed to update media',
+        });
+      }
+    });
+
+    /**
+     * POST /api/media/delete-batch - Delete multiple media items
+     */
+    fastify.post('/api/media/delete-batch', async function (req, reply) {
+      try {
+        const { ids } = req.body as { ids: string[] };
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+          return reply.status(400).send({
+            success: false,
+            error: 'No IDs provided',
+          });
+        }
+
+        let deletedCount = 0;
+        const errors: any[] = [];
+
+        for (const id of ids) {
+          try {
+            const mediaItem = await prisma.mediaItem.findUnique({
+              where: { id },
+              include: { folder: true },
+            });
+
+            if (!mediaItem) continue;
+
+            const filePath = path.join(mediaItem.folder.folderPath, mediaItem.filename);
+
+            if (fs.existsSync(filePath)) {
+              try {
+                fs.unlinkSync(filePath);
+              } catch (err) {
+                logger.warn(`Failed to delete file ${filePath}: ${err}`);
+              }
+            }
+
+            await prisma.mediaItem.delete({ where: { id } });
+            deletedCount++;
+          } catch (e: any) {
+            errors.push({ id, error: e.message || String(e) });
+          }
+        }
+
+        return reply.send({
+          success: true,
+          data: { deletedCount, errors },
+        });
+
+      } catch (error) {
+        logger.error('Error batch deleting media:', error);
+        return reply.status(500).send({
+          success: false,
+          error: 'Failed to delete media items',
         });
       }
     });

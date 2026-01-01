@@ -238,19 +238,58 @@
           <!-- Add Folder Section -->
           <div class="mb-6 p-4 bg-gray-50 rounded-lg">
             <h3 class="font-semibold mb-3 text-gray-700">Add Media Folder</h3>
-            <form @submit.prevent="addFolder" class="flex gap-2">
-              <input v-model="folderPath" type="text" placeholder="Enter folder path (e.g., C:\Users\Username\Videos)"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required />
-              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded transition"
+            <form @submit.prevent="handleFolderAction" class="flex gap-2">
+              <input v-model="folderPath" type="text" placeholder="Enter folder path or select..."
+                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <button type="button" @click="handleFolderAction"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded transition"
                 :disabled="isScanning">
-                {{ isScanning ? 'Scanning...' : 'Scan Folder' }}
+                {{ !folderPath ? '📂 Select Folder' : (isScanning ? 'Scanning...' : 'Scan Folder') }}
               </button>
             </form>
             <p v-if="scanMessage" class="mt-2 text-sm"
               :class="scanMessage.type === 'error' ? 'text-red-600' : 'text-green-600'">
               {{ scanMessage.text }}
             </p>
+          </div>
+
+          <!-- Media Toolbar (Search & Selection) -->
+          <div class="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- Search -->
+            <div class="relative w-full md:w-64">
+              <input type="text" placeholder="Search media..." v-model="searchQuery"
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            </div>
+
+            <!-- Selection Controls -->
+            <div class="flex items-center gap-2">
+              <div v-if="!isSelectionMode">
+                <button @click="toggleSelectionMode"
+                  class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded transition">
+                  Select
+                </button>
+              </div>
+              <div v-else class="flex items-center gap-2 animate-fade-in">
+                <span class="text-gray-600 font-medium">{{ selectedMediaIds.length }} selected</span>
+                <button @click="selectAll"
+                  class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-1 px-3 rounded transition">
+                  All
+                </button>
+                <button @click="deleteSelected" :disabled="selectedMediaIds.length === 0"
+                  class="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-bold py-2 px-4 rounded transition flex items-center gap-1">
+                  <span>🗑️</span> Delete
+                </button>
+                <button @click="cancelSelection" class="text-gray-500 hover:text-gray-700 font-medium px-2">
+                  Done
+                </button>
+              </div>
+
+              <button @click="openUploadModal"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition flex items-center gap-2">
+                <span>+</span> Upload
+              </button>
+            </div>
           </div>
 
           <!-- Filter Buttons -->
@@ -285,9 +324,28 @@
           <div v-if="filteredMedia.length > 0"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <div v-for="media in filteredMedia" :key="media.id"
-              class="media-card bg-white border border-gray-200 rounded-lg overflow-hidden">
+              class="media-card bg-white border border-gray-200 rounded-lg overflow-hidden relative transition-all duration-200"
+              :class="{'ring-2 ring-indigo-500 transform scale-105': selectedMediaIds.includes(media.id)}">
+
+              <!-- Selection Overlay (Intercepts clicks in selection mode) -->
+              <div v-if="isSelectionMode" @click="toggleSelect(media)"
+                class="absolute inset-0 z-20 cursor-pointer bg-white bg-opacity-10 flex items-center justify-center transition-colors hover:bg-opacity-20">
+                <div v-if="selectedMediaIds.includes(media.id)"
+                  class="bg-indigo-600 text-white rounded-full p-2 shadow-lg animate-bounce-in">
+                  ✅
+                </div>
+              </div>
+
+              <!-- Selection Checkbox (Visual Aid) -->
+              <div v-if="isSelectionMode" class="absolute top-2 right-2 z-30">
+                <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors"
+                  :class="selectedMediaIds.includes(media.id) ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300'">
+                  <span v-if="selectedMediaIds.includes(media.id)" class="text-white text-xs">✓</span>
+                </div>
+              </div>
+
               <!-- Thumbnail -->
-              <div class="relative h-48 bg-gray-200 cursor-pointer group" @click="openPlayModal(media)">
+              <div class="relative h-48 bg-gray-200 cursor-pointer group" @click="toggleSelect(media)">
                 <img :src="media.thumbnailUrl" :alt="media.filename"
                   class="w-full h-full object-cover transition group-hover:opacity-90" />
                 <div
@@ -487,6 +545,8 @@
           canvasAspectRatio: 16 / 9,
           editingId: null,
           editName: '',
+          isSelectionMode: false,
+          selectedMediaIds: [],
         };
       },
       computed: {
@@ -515,6 +575,58 @@
         window.removeEventListener('mouseup', this.stopDrag);
       },
       methods: {
+        toggleSelectionMode() {
+          this.isSelectionMode = !this.isSelectionMode;
+          this.selectedMediaIds = [];
+        },
+        toggleSelect(media) {
+          if (!this.isSelectionMode) {
+            this.openPlayModal(media);
+            return;
+          }
+          const idx = this.selectedMediaIds.indexOf(media.id);
+          if (idx === -1) {
+            this.selectedMediaIds.push(media.id);
+          } else {
+            this.selectedMediaIds.splice(idx, 1);
+          }
+        },
+        selectAll() {
+          if (this.selectedMediaIds.length === this.filteredMedia.length) {
+            this.selectedMediaIds = [];
+          } else {
+            this.selectedMediaIds = this.filteredMedia.map(m => m.id);
+          }
+        },
+        cancelSelection() {
+          this.isSelectionMode = false;
+          this.selectedMediaIds = [];
+        },
+        async deleteSelected() {
+          if (!confirm(`Are you sure you want to delete ${this.selectedMediaIds.length} items? This cannot be undone.`)) return;
+
+          try {
+            const res = await fetch('/admin/api/media/delete-batch', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: this.selectedMediaIds })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              // Remove from local list
+              this.mediaLibrary = this.mediaLibrary.filter(m => !this.selectedMediaIds.includes(m.id));
+              this.selectedMediaIds = [];
+              this.isSelectionMode = false;
+              alert(`Deleted ${data.data.deletedCount} items.`);
+            } else {
+              alert('Failed to delete some items.');
+            }
+          } catch (e) {
+            console.error(e);
+            alert('Error deleting items.');
+          }
+        },
         startRename(media) {
           this.editingId = media.id;
           this.editName = media.name || media.filename;
@@ -615,6 +727,25 @@
             w: parseFloat(w.toFixed(1)),
             h: parseFloat(h.toFixed(1))
           };
+        },
+
+        async handleFolderAction() {
+          if (!this.folderPath) {
+            try {
+              const res = await fetch('/admin/api/admin/browse-folder', { method: 'POST' });
+              const data = await res.json();
+              if (data.success && data.path) {
+                this.folderPath = data.path;
+              } else if (data.error) {
+                this.scanMessage = { type: 'error', text: data.error };
+              }
+            } catch (e) {
+              console.error(e);
+              this.scanMessage = { type: 'error', text: 'Failed to open picker' };
+            }
+          } else {
+            this.addFolder();
+          }
         },
 
         applyPreset(type) {
