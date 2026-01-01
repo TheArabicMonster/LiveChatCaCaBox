@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import sharp from 'sharp';
 import { getVideoDurationInSeconds } from 'get-video-duration';
 // import { logger } from '../utils/logger'; // Removed: Plugin global
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from 'ffmpeg-static';
-import os from 'os';
 
 // Configure ffmpeg
 if (ffmpegPath) {
@@ -71,12 +71,11 @@ export const generateVideoThumbnail = async (filePath: string): Promise<string> 
         fs.mkdirSync(tempDir, { recursive: true });
       }
 
-      console.log(`[MediaScanner] Using temp dir: ${tempDir}`);
 
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
       const filename = `thumb-${uniqueSuffix}.png`;
       const tempFilePath = path.join(tempDir, filename);
-
 
       ffmpeg(filePath)
         .screenshots({
@@ -84,7 +83,7 @@ export const generateVideoThumbnail = async (filePath: string): Promise<string> 
           folder: tempDir,
           filename: filename,
           timestamps: ['00:00:00'], // Take the very first frame
-          size: '320x?' // Resize to 320px width, auto height
+          size: '320x?', // Resize to 320px width, auto height
         })
         .on('end', () => {
           try {
@@ -106,7 +105,6 @@ export const generateVideoThumbnail = async (filePath: string): Promise<string> 
           }
         })
         .on('error', (err) => {
-          console.error(`[MediaScanner] Ffmpeg error for ${filePath}:`, err);
           if (global.logger) {
             logger.warn(`Failed to generate video thumbnail for ${filePath}: ${err.message}`);
           }
