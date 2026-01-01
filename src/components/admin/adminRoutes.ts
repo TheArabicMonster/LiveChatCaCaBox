@@ -59,6 +59,39 @@ export const AdminRoutes = () =>
     });
 
     /**
+     * PUT /api/media/:id - Update media item (rename)
+     */
+    fastify.put('/api/media/:id', async function (req, reply) {
+      try {
+        const { id } = req.params as { id: string };
+        const { name } = req.body as { name: string };
+
+        if (!name) {
+          return reply.status(400).send({
+            success: false,
+            error: 'Name is required',
+          });
+        }
+
+        const updatedMedia = await prisma.mediaItem.update({
+          where: { id },
+          data: { name },
+        });
+
+        return reply.send({
+          success: true,
+          data: updatedMedia,
+        });
+      } catch (error) {
+        logger.error('Error updating media:', error);
+        return reply.status(500).send({
+          success: false,
+          error: 'Failed to update media',
+        });
+      }
+    });
+
+    /**
      * GET /api/media/:id/stream - Stream a specific media file
      */
     const streamHandler = async function (req, reply) {
