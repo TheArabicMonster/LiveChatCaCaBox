@@ -6,10 +6,11 @@ import { getVideoDurationInSeconds } from 'get-video-duration';
 // Supported media extensions
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
+const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a'];
 
 interface MediaItemData {
   filename: string;
-  fileType: 'image' | 'video';
+  fileType: 'image' | 'video' | 'audio';
   fileSize: number;
   duration?: number;
   thumbnailUrl: string;
@@ -49,13 +50,28 @@ export const generateVideoThumbnail = async (): Promise<string> => {
 };
 
 /**
+ * Generate a placeholder thumbnail for audio files
+ */
+export const generateAudioThumbnail = async (): Promise<string> => {
+  return generatePlaceholderThumbnail('audio');
+};
+
+/**
  * Generate a placeholder SVG thumbnail
- * @param type Type of media (image or video)
+ * @param type Type of media (image, video, or audio)
  * @returns Base64 encoded SVG
  */
-const generatePlaceholderThumbnail = (type: 'image' | 'video'): string => {
-  const icon = type === 'video' ? '▶' : '🖼';
-  const color = type === 'video' ? '#3b82f6' : '#10b981';
+const generatePlaceholderThumbnail = (type: 'image' | 'video' | 'audio'): string => {
+  let icon = '🖼';
+  let color = '#10b981';
+
+  if (type === 'video') {
+    icon = '▶';
+    color = '#3b82f6';
+  } else if (type === 'audio') {
+    icon = '🎵';
+    color = '#8b5cf6';
+  }
 
   const svg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
     <rect width="200" height="200" fill="${color}"/>
@@ -106,51 +122,59 @@ export const scanMediaFolder = async (folderPath: string): Promise<MediaItemData
       const filePath = path.join(folderPath, filename);
 
       // Skip if not a file
-      const fileStats = fs.statSync(filePath);
-      if (!fileStats.isFile()) {
-        continue;
+      try {
+        const fileStats = fs.statSync(filePath);
+        if (!fileStats.isFile()) {
+          continue;
+        }
+
+        // Get file extension
+        const ext = path.extname(filename).toLowerCase();
+
+        // Determine file type
+        let fileType: 'image' | 'video' | 'audio' | null = null;
+        if (IMAGE_EXTENSIONS.includes(ext)) {
+          fileType = 'image';
+        } else if (VIDEO_EXTENSIONS.includes(ext)) {
+          fileType = 'video';
+        } else if (AUDIO_EXTENSIONS.includes(ext)) {
+          fileType = 'audio';
+        }
+
+        // Skip unsupported files
+        if (!fileType) {
+          continue;
+        }
+
+        // Generate thumbnail
+        let thumbnailUrl: string;
+        if (fileType === 'image') {
+          thumbnailUrl = await generateImageThumbnail(filePath);
+        } else if (fileType === 'video') {
+          thumbnailUrl = await generateVideoThumbnail();
+        } else {
+          thumbnailUrl = await generateAudioThumbnail();
+        }
+
+        // Get duration for videos and audio
+        let duration: number | undefined;
+        if (fileType === 'video' || fileType === 'audio') {
+          duration = await getVideoDuration(filePath);
+        }
+
+        mediaItems.push({
+          filename,
+          fileType,
+          fileSize: fileStats.size,
+          duration,
+          thumbnailUrl,
+          filePath,
+        });
+
+        logger.debug(`Scanned media: ${filename} (${fileType})`);
+      } catch (e) {
+        logger.warn(`Error processing file ${filename}:`, e);
       }
-
-      // Get file extension
-      const ext = path.extname(filename).toLowerCase();
-
-      // Determine file type
-      let fileType: 'image' | 'video' | null = null;
-      if (IMAGE_EXTENSIONS.includes(ext)) {
-        fileType = 'image';
-      } else if (VIDEO_EXTENSIONS.includes(ext)) {
-        fileType = 'video';
-      }
-
-      // Skip unsupported files
-      if (!fileType) {
-        continue;
-      }
-
-      // Generate thumbnail
-      let thumbnailUrl: string;
-      if (fileType === 'image') {
-        thumbnailUrl = await generateImageThumbnail(filePath);
-      } else {
-        thumbnailUrl = await generateVideoThumbnail();
-      }
-
-      // Get duration for videos
-      let duration: number | undefined;
-      if (fileType === 'video') {
-        duration = await getVideoDuration(filePath);
-      }
-
-      mediaItems.push({
-        filename,
-        fileType,
-        fileSize: fileStats.size,
-        duration,
-        thumbnailUrl,
-        filePath,
-      });
-
-      logger.debug(`Scanned media: ${filename} (${fileType})`);
     }
 
     logger.info(`Scanned ${mediaItems.length} media files from ${folderPath}`);

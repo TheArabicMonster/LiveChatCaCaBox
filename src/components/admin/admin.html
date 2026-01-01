@@ -8,6 +8,11 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
 
   <!-- Socket.IO Client -->
   <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
@@ -31,11 +36,11 @@
   </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-300">
   <div id="app" v-cloak>
     <!-- Authentication Screen -->
     <div v-if="!isAuthenticated" class="flex items-center justify-center min-h-screen">
-      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+      <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full transition-colors">
         <h1 class="text-3xl font-bold text-center mb-6 text-indigo-600">LiveChat CaCaBox</h1>
         <h2 class="text-xl text-center mb-6 text-gray-700">Admin Interface</h2>
 
@@ -45,7 +50,7 @@
               Username
             </label>
             <input v-model="username" type="text" id="username"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="shadow appearance-none border dark:border-gray-600 rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter your username" required />
           </div>
 
@@ -67,7 +72,8 @@
       <!-- Media Playback Modal -->
       <div v-if="selectedMedia" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
         @click.self="closePlayModal">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl overflow-hidden relative">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl overflow-hidden relative transition-colors">
           <!-- Close Button -->
           <button @click="closePlayModal"
             class="absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-70 transition">
@@ -79,11 +85,11 @@
 
           <!-- Content -->
           <div class="p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Play Media</h3>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Play Media</h3>
 
             <label class="block text-sm font-semibold text-gray-700 mb-2">Add a Message (Optional)</label>
             <textarea v-model="playText" placeholder="Start typing..." rows="3"
-              class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4 dark:bg-gray-700 dark:text-white"
               ref="playInput" @keyup.enter.ctrl="confirmPlay"></textarea>
 
             <div class="flex gap-3 mb-4">
@@ -195,10 +201,11 @@
       </div>
       <!-- Header -->
       <!-- Header -->
-      <div class="bg-white rounded-lg shadow-md p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors">
         <div>
-          <h1 class="text-2xl font-bold text-indigo-600">LiveChat CaCaBox Admin</h1>
-          <p class="text-gray-600">Welcome, {{ username }}!</p>
+          <h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">LiveChat CaCaBox Admin</h1>
+          <p class="text-gray-600 dark:text-gray-300">Welcome, {{ username }}!</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -216,13 +223,13 @@
       </div>
 
       <!-- Tabs Navigation -->
-      <div class="bg-white rounded-lg shadow-md mb-6">
-        <div class="flex border-b">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6 transition-colors">
+        <div class="flex border-b dark:border-gray-700">
           <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="[
               'flex-1 py-3 px-4 text-center font-semibold transition',
               activeTab === tab.id
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                : 'text-gray-600 hover:text-indigo-600'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+                : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'
             ]">
             {{ tab.icon }} {{ tab.name }}
           </button>
@@ -230,17 +237,17 @@
       </div>
 
       <!-- Tab Content -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
         <!-- Media Library Tab -->
         <div v-show="activeTab === 'library'">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">📚 Media Library</h2>
+          <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">📚 Media Library</h2>
 
           <!-- Add Folder Section -->
-          <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 class="font-semibold mb-3 text-gray-700">Add Media Folder</h3>
+          <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
+            <h3 class="font-semibold mb-3 text-gray-700 dark:text-gray-200">Add Media Folder</h3>
             <form @submit.prevent="handleFolderAction" class="flex gap-2">
               <input v-model="folderPath" type="text" placeholder="Enter folder path or select..."
-                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white" />
               <button type="button" @click="handleFolderAction"
                 class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded transition"
                 :disabled="isScanning">
@@ -258,7 +265,7 @@
             <!-- Search -->
             <div class="relative w-full md:w-64">
               <input type="text" placeholder="Search media..." v-model="searchQuery"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
               <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
             </div>
 
@@ -266,14 +273,14 @@
             <div class="flex items-center gap-2">
               <div v-if="!isSelectionMode">
                 <button @click="toggleSelectionMode"
-                  class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded transition">
+                  class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-2 px-4 rounded transition">
                   Select
                 </button>
               </div>
               <div v-else class="flex items-center gap-2 animate-fade-in">
-                <span class="text-gray-600 font-medium">{{ selectedMediaIds.length }} selected</span>
+                <span class="text-gray-600 dark:text-gray-300 font-medium">{{ selectedMediaIds.length }} selected</span>
                 <button @click="selectAll"
-                  class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-1 px-3 rounded transition">
+                  class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm py-1 px-3 rounded transition">
                   All
                 </button>
                 <button @click="deleteSelected" :disabled="selectedMediaIds.length === 0"
@@ -284,11 +291,6 @@
                   Done
                 </button>
               </div>
-
-              <button @click="openUploadModal"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition flex items-center gap-2">
-                <span>+</span> Upload
-              </button>
             </div>
           </div>
 
@@ -324,7 +326,7 @@
           <div v-if="filteredMedia.length > 0"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <div v-for="media in filteredMedia" :key="media.id"
-              class="media-card bg-white border border-gray-200 rounded-lg overflow-hidden relative transition-all duration-200"
+              class="media-card bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden relative transition-all duration-200"
               :class="{'ring-2 ring-indigo-500 transform scale-105': selectedMediaIds.includes(media.id)}">
 
               <!-- Selection Overlay (Intercepts clicks in selection mode) -->
@@ -373,11 +375,11 @@
                   <button @click.stop="cancelRename" class="text-gray-400 hover:text-gray-600 p-1">✖</button>
                 </div>
                 <div v-else class="mb-1">
-                  <p class="font-semibold text-sm text-gray-800 truncate" :title="media.filename">
+                  <p class="font-semibold text-sm text-gray-800 dark:text-white truncate" :title="media.filename">
                     {{ media.name || media.filename }}
                   </p>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Owner: {{ media.owner.username }}
                   <span :class="media.owner.isOnline ? 'text-green-500' : 'text-gray-400'">●</span>
                 </p>
@@ -403,20 +405,20 @@
 
         <!-- Send Message Tab -->
         <div v-show="activeTab === 'message'">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">📤 Send Message</h2>
+          <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">📤 Send Message</h2>
 
           <form @submit.prevent="sendMessage" class="space-y-4">
             <div>
-              <label class="block text-gray-700 font-semibold mb-2">Text</label>
+              <label class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Text</label>
               <textarea v-model="messageText"
-                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 rows="4" placeholder="Enter your message..."></textarea>
             </div>
 
             <div>
-              <label class="block text-gray-700 font-semibold mb-2">URL (Optional)</label>
+              <label class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">URL (Optional)</label>
               <input v-model="messageUrl" type="url"
-                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 placeholder="https://example.com/image.jpg" />
             </div>
 
@@ -434,13 +436,13 @@
 
         <!-- Text-to-Speech Tab -->
         <div v-show="activeTab === 'tts'">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">🎤 Text-to-Speech</h2>
+          <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">🎤 Text-to-Speech</h2>
 
           <form @submit.prevent="speak" class="space-y-4">
             <div>
-              <label class="block text-gray-700 font-semibold mb-2">Text to Speak</label>
+              <label class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Text to Speak</label>
               <textarea v-model="ttsText"
-                class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 rows="6" placeholder="Enter text to convert to speech..." required></textarea>
             </div>
 
@@ -463,12 +465,12 @@
 
           <div v-if="onlineUsers.length > 0" class="space-y-2">
             <div v-for="user in onlineUsers" :key="user.userId"
-              class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
               <div class="flex items-center gap-3">
                 <span class="text-green-500 text-xl">●</span>
                 <div>
-                  <p class="font-semibold text-gray-800">{{ user.username }}</p>
-                  <p class="text-sm text-gray-500">{{ user.mediaCount || 0 }} media files</p>
+                  <p class="font-semibold text-gray-800 dark:text-white">{{ user.username }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.mediaCount || 0 }} media files</p>
                 </div>
               </div>
             </div>
@@ -481,9 +483,17 @@
 
       <!-- Floating Stop Button -->
       <button @click="stopCurrent"
-        class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl transition transform hover:scale-110"
+        class="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl transition transform hover:scale-110 z-50"
         title="Stop Current Media">
         ⏹
+      </button>
+
+      <!-- Floating Dark Mode Toggle -->
+      <button @click="toggleTheme"
+        class="fixed bottom-6 left-6 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-xl transition transform hover:scale-110 z-50"
+        :class="isDarkMode ? 'bg-gray-700 text-yellow-300 hover:bg-gray-600' : 'bg-white text-gray-800 hover:bg-gray-100'"
+        title="Toggle Dark Mode">
+        {{ isDarkMode ? '☀️' : '🌙' }}
       </button>
     </div>
   </div>
@@ -547,6 +557,7 @@
           editName: '',
           isSelectionMode: false,
           selectedMediaIds: [],
+          isDarkMode: false,
         };
       },
       computed: {
@@ -569,12 +580,32 @@
         // Global event listeners for drag/resize
         window.addEventListener('mousemove', this.onDrag);
         window.addEventListener('mouseup', this.stopDrag);
+
+        // Load Theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          this.isDarkMode = true;
+          document.documentElement.classList.add('dark');
+        } else {
+          this.isDarkMode = false;
+          document.documentElement.classList.remove('dark');
+        }
       },
       beforeUnmount() {
         window.removeEventListener('mousemove', this.onDrag);
         window.removeEventListener('mouseup', this.stopDrag);
       },
       methods: {
+        toggleTheme() {
+          this.isDarkMode = !this.isDarkMode;
+          if (this.isDarkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+        },
         toggleSelectionMode() {
           this.isSelectionMode = !this.isSelectionMode;
           this.selectedMediaIds = [];

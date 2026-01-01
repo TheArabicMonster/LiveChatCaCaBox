@@ -156,15 +156,9 @@ export const AdminRoutes = () =>
 
             if (!mediaItem) continue;
 
-            const filePath = path.join(mediaItem.folder.folderPath, mediaItem.filename);
-
-            if (fs.existsSync(filePath)) {
-              try {
-                fs.unlinkSync(filePath);
-              } catch (err) {
-                logger.warn(`Failed to delete file ${filePath}: ${err}`);
-              }
-            }
+            // We do NOT delete the file from disk, only from the database, per user request.
+            // const filePath = path.join(mediaItem.folder.folderPath, mediaItem.filename);
+            // if (fs.existsSync(filePath)) { ... }
 
             await prisma.mediaItem.delete({ where: { id } });
             deletedCount++;
@@ -246,6 +240,13 @@ export const AdminRoutes = () =>
           else if (ext === '.mov') contentType = 'video/quicktime'; // Keep quicktime, let browser decide based on URL
           else if (ext === '.avi') contentType = 'video/x-msvideo';
           else if (ext === '.mkv') contentType = 'video/x-matroska';
+        } else if (mediaItem.fileType === 'audio') {
+          if (ext === '.mp3') contentType = 'audio/mpeg';
+          else if (ext === '.wav') contentType = 'audio/wav';
+          else if (ext === '.ogg') contentType = 'audio/ogg';
+          else if (ext === '.flac') contentType = 'audio/flac';
+          else if (ext === '.aac') contentType = 'audio/aac';
+          else if (ext === '.m4a') contentType = 'audio/mp4';
         }
 
         // Stream the file
